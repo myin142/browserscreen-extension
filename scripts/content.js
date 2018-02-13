@@ -3,7 +3,7 @@ var styleID = "browserscreen_VideoStyleID";
 
 chrome.runtime.onMessage.addListener(function(msg){
 
-	if(msg.message == "button_clicked" && window == window.top){
+	if(msg.message == "button_clicked" /*&& window == window.top*/){
 		var style = document.querySelector("#" + styleID);
 
 		// Video Browser Screen
@@ -13,8 +13,20 @@ chrome.runtime.onMessage.addListener(function(msg){
 			if(video == null){
 				console.log("No Video could be found.");
 			}else{
+				
+				//TODO Check if is inside iframe
+
+				console.log("Found a video");
 				createMainStyle();
-				console.log(video);
+
+				// Add video class to all parents
+				var elem = video;
+				while(elem != null){
+					elem.classList.add(videoClass);
+					elem = elem.parentNode;
+				}
+
+				//video.classList.add(videoClass);
 			}
 		}
 
@@ -22,6 +34,15 @@ chrome.runtime.onMessage.addListener(function(msg){
 		else{
 			removeMainStyle();
 			console.log("Restore Video");
+
+			// Remove all parent elements with video class
+			var elem = video;
+			while(elem.classList.contains(videoClass)){
+				elem.classList.remove(videoClass);
+				elem = elem.parentNode;
+			}
+
+			//video.classList.remove(videoClass);
 		}
 	}
 
