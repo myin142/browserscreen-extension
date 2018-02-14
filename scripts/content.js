@@ -1,9 +1,10 @@
-var videoClass = "browserscreen_FullscreenVideoClass";
+var videoClass = "browserscreen_VideoIDClass";
+var fullscreenClass = "browserscreen_FullscreenVideoClass";
 var styleID = "browserscreen_VideoStyleID";
 
 chrome.runtime.onMessage.addListener(function(msg){
 
-	if(msg.message == "button_clicked" /*&& window == window.top*/){
+	if(msg.message == "button_clicked"){
 		var style = document.querySelector("#" + styleID);
 
 		// Video Browser Screen
@@ -13,20 +14,20 @@ chrome.runtime.onMessage.addListener(function(msg){
 			if(video == null){
 				console.log("No Video could be found.");
 			}else{
-				
-				//TODO Check if is inside iframe
-
 				console.log("Found a video");
 				createMainStyle();
+				video.classList.add(videoClass);
 
 				// Add video class to all parents
 				var elem = video;
-				while(elem != null){
-					elem.classList.add(videoClass);
+				while(elem != null && elem.classList != undefined){
+					elem.classList.add(fullscreenClass);
 					elem = elem.parentNode;
 				}
 
-				//video.classList.add(videoClass);
+				// Send message to top frame
+				if(window != window.top)
+					chrome.runtime.sendMessage({iframe: window.location.href});
 			}
 		}
 
@@ -34,24 +35,44 @@ chrome.runtime.onMessage.addListener(function(msg){
 		else{
 			removeMainStyle();
 			console.log("Restore Video");
+			video.classList.remove(videoClass);
 
 			// Remove all parent elements with video class
 			var elem = video;
-			while(elem.classList.contains(videoClass)){
-				elem.classList.remove(videoClass);
+			while(elem != undefined && elem.classList.contains(fullscreenClass)){
+				elem.classList.remove(fullscreenClass);
 				elem = elem.parentNode;
 			}
 
-			//video.classList.remove(videoClass);
+			// Fix Youtube offset error
+			window.dispatchEvent(new Event("resize"));
+
 		}
+	}
+	else if(window == window.top && msg.iframe){
+		var iframes = document.querySelectorAll("iframe");
+		console.log(msg.iframe);
+		for(var i = 0; i < iframes.length; i++){
+			console.log(iframes[i].src);
+			var elemSrc = getFormattedSource(iframes[i].src);
+			var msgSrc = getFormattedSource(msg.iframe);
+
+			if(elemSrc == msgSrc)
+				iframes[i].classList.add(fullscreenClass);
+		}
+
+		createMainStyle();
 	}
 
 });
 
-// Find Video in Website: HTML5, 
+function getFormattedSource(src){
+	return src.replace(/^https?\:\/\//i, "").replace(/^http?\:\/\//i, "");
+}
+
+// Find Video in Website: HTML5,
 function findVideo(){
 	var vid = document.querySelector("video");
-
 	if(vid != null) return vid;
 
 	console.log("No HTML5 video found.");
@@ -66,7 +87,7 @@ function createMainStyle(){
 		body, html{
 			overflow: hidden !important;
 		}
-		.`+videoClass+`{
+		.`+fullscreenClass+`{
 			position: fixed !important;
 			top: 0 !important;
 			left: 0 !important;

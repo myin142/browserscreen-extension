@@ -1,5 +1,7 @@
 chrome.runtime.onMessage.addListener(function(message, sender) {
-
+	if(message.iframe){
+		chrome.tabs.sendMessage(sender.tab.id, {iframe: message.iframe});
+	}
 });
 
 chrome.browserAction.onClicked.addListener(function(tab){
