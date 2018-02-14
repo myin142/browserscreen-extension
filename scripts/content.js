@@ -4,16 +4,21 @@ var styleID = "browserscreen_VideoStyleID";
 
 chrome.runtime.onMessage.addListener(function(msg){
 
+	// On Extension Button Click
 	if(msg.message == "button_clicked"){
 		var style = document.querySelector("#" + styleID);
 
-		// Video Browser Screen
+		// Find Video in Window and resize
 		if(style == null){
 			var video = findVideo();
 
+			// No Video Found
 			if(video == null){
 				console.log("No Video could be found.");
-			}else{
+			}
+
+			// Found a Video
+			else{
 				console.log("Found a video");
 				createMainStyle();
 				video.classList.add(videoClass);
@@ -31,7 +36,7 @@ chrome.runtime.onMessage.addListener(function(msg){
 			}
 		}
 
-		// Video Restore Size
+		// Video Restore on all Windows
 		else{
 			removeMainStyle();
 			console.log("Restore Video");
@@ -49,11 +54,11 @@ chrome.runtime.onMessage.addListener(function(msg){
 
 		}
 	}
+
+	// On Message from an IFRAME
 	else if(window == window.top && msg.iframe){
 		var iframes = document.querySelectorAll("iframe");
-		console.log(msg.iframe);
 		for(var i = 0; i < iframes.length; i++){
-			console.log(iframes[i].src);
 			var elemSrc = getFormattedSource(iframes[i].src);
 			var msgSrc = getFormattedSource(msg.iframe);
 
@@ -66,6 +71,7 @@ chrome.runtime.onMessage.addListener(function(msg){
 
 });
 
+// Format Link to prevent mistakes with http/https
 function getFormattedSource(src){
 	return src.replace(/^https?\:\/\//i, "").replace(/^http?\:\/\//i, "");
 }
@@ -107,6 +113,7 @@ function createMainStyle(){
 	document.querySelector("head").appendChild(style);
 }
 
+// Remove Main Style
 function removeMainStyle(){
 	var style = document.querySelector("#" + styleID);
 	if(style != null) style.parentNode.removeChild(style);
