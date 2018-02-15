@@ -12,35 +12,22 @@ chrome.runtime.onMessage.addListener(function(msg){
 		if(debugging) console.log("Searching in Window");
 
 		var vid = findVideos();
-
-		// No Video Found
-		if(vid.length == 0){
+		if(vid == null){
 			if(debugging) console.log("No Videos could be found.");
 			return;
 		}
 
 		// Found a Video
-		if(debugging){
-			console.log("Found a video");
-			console.log(vid);
-		}
 		chrome.runtime.sendMessage({found: true}, function(response){
 			if(debugging){
 				console.log("Resize Video");
 				console.log(vid);
 			}
 
-			vid.classList.add(videoClass);
-
 			// Resize Video and all top frames
+			vid.classList.add(videoClass);
 			resizeElements(vid);
 		});
-
-		// Found multiple Videos in one Window
-		/*else if(debugging){
-			console.log("Only one video can be resized. Found: ");
-			console.log(vids);
-		}*/
 	}
 
 	// Restore Video
@@ -61,7 +48,6 @@ chrome.runtime.onMessage.addListener(function(msg){
 	// On Message from an IFRAME/OBJECT
 	else if(msg.subWindow){
 		if(debugging) console.log("Search Sub Window");
-
 		var link = msg.subWindow;
 
 		// Search Iframes
