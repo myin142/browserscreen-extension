@@ -1,5 +1,7 @@
-//TODO Handle Double IFRAMEs/OBJECTs
-//TODO Handle multiple video sources
+if(performance.navigation.type == 1){
+	chrome.runtime.sendMessage({reload: true});
+}
+
 var debugging = true;
 
 var videoClass = "browserscreen_VideoIDClass";
@@ -7,107 +9,170 @@ var fullscreenClass = "browserscreen_FullscreenVideoClass";
 var styleID = "browserscreen_VideoStyleID";
 
 chrome.runtime.onMessage.addListener(function(msg){
-	var videos = null;
+	var video = null;
+	if(debugging) console.log("Window: " + window.location.href);
 
-	// Find Videos on Website
-	if(msg.search){
-		videos = findVideos();
+	// Resize Video
+	if(msg.resize){
+		if(debugging) console.log("Searching in Window");
 
-		if(debugging){
-			console.log("Searching in Window");
-			console.log(videos);
-		}
+		var vid = findVideos();
 
 		// No Video Found
-		if(videos == null){
-			console.log("No Videos could be found.");
+		if(vid.length == 0){
+			if(debugging) console.log("No Videos could be found.");
+			return;
 		}
 
 		// Found a Video
-		else{
-			chrome.runtime.sendMessage({found: true});
+		if(debugging){
+			console.log("Found a video");
+			console.log(vid);
 		}
-	}
-/*
-	// Resize Videos
-	else if(videos != null && msg.resize){
-		createMainStyle();
-		video.classList.add(videoClass);
+		chrome.runtime.sendMessage({found: true}, function(response){
+			video = vid;
 
-		// Add video class to all parents
-		var elem = video;
-		while(elem != null && elem.classList != undefined){
-			elem.classList.add(fullscreenClass);
-			elem = elem.parentNode;
-		}
+			if(debugging){
+				console.log("Resize Video");
+				console.log(video);
+			}
 
-		// Send message to top frame
-		if(window != window.top)
-			chrome.runtime.sendMessage({iframe: window.location.href});
-	}
+			video.classList.add(videoClass);
 
-	// Restore Videos
-	else if(videos != null && msg.restore){
-		removeMainStyle();
-		console.log("Restore Video");
+			// Resize Video and all top frames
+			resizeElements(video);
+		});
 
-		var video = document.querySelector("." + videoClass);
-		if(video != null) video.classList.remove(videoClass);
-
-		// Remove all parent elements with video class
-		var elem = video;
-		while(elem != null && elem.classList != undefined && elem.classList.contains(fullscreenClass)){
-			elem.classList.remove(fullscreenClass);
-			elem = elem.parentNode;
-		}
-
-		// Fix Youtube offset error
-		window.dispatchEvent(new Event("resize"));
+		// Found multiple Videos in one Window
+		/*else if(debugging){
+			console.log("Only one video can be resized. Found: ");
+			console.log(vids);
+		}*/
 	}
 
-	// On Message from an IFRAME
-	else if(window == window.top && msg.iframe){
-		var iframes = document.querySelectorAll("iframe");
-		for(var i = 0; i < iframes.length; i++){
-			var elemSrc = getFormattedSource(iframes[i].src);
-			var msgSrc = getFormattedSource(msg.iframe);
+	// Restore Video
+	else if(msg.restore){
+		if(debugging) console.log("Restore Video");
 
-			if(elemSrc == msgSrc)
-				iframes[i].classList.add(fullscreenClass);
+		if(video != null){
+			video.classList.remove(videoClass);
+
+			// Fix Youtube offset error
+			window.dispatchEvent(new Event("resize"));
 		}
 
-		createMainStyle();
+		restoreElements();
 	}
-*/
+
+	// On Message from an IFRAME/OBJECT
+	else if(msg.subWindow){
+		if(debugging) console.log("Search Sub Window");
+
+		var link = msg.subWindow;
+
+		// Search Iframes
+		var iframe = searchIFrames(link);
+		if(iframe != null){
+			resizeElements(iframe);
+			if(debugging){
+				console.log("Found Iframe: ");
+				console.log(iframe);
+			}
+			return;
+		}
+
+		// Search Objects
+		var object = searchObjects(link);
+		if(object != null){
+			resizeElements(object);
+			if(debugging){
+				console.log("Found Object: ");
+				console.log(object);
+			}
+			return;
+		}
+	}
+
 });
+
+// Search for Link in IFRAMEs
+function searchIFrames(link){
+	var iframes = document.querySelectorAll("iframe");
+	for(var i = 0; i < iframes.length; i++){
+		var elemSrc = getFormattedSource(iframes[i].src);
+		var msgSrc = getFormattedSource(link);
+
+		if(elemSrc == msgSrc)
+			return iframes[i];
+	}
+}
+
+// Search for Link in OBJECTs
+function searchObjects(link){
+	var objects = document.querySelectorAll("object");
+	for(var i = 0; i < objects.length; i++){
+		var elemSrc = getFormattedSource(objects[i].data);
+		var msgSrc = getFormattedSource(link);
+
+		if(elemSrc == msgSrc)
+			return objects[i];
+	}
+}
+
+// Remove Styles and Fullscreen Classes
+function restoreElements(){
+	removeMainStyle();
+
+	// Remove Fullscreen Classes
+	var elems = document.querySelectorAll(fullscreenClass);
+	for(var i = 0; i < elems.length; i++){
+		elems[i].classList.remove(fullscreenClass);
+	}
+}
+
+// Add Fullscreen Classes to all Parents of Video and message top frames
+function resizeElements(elem){
+	while(elem != null && elem.classList != undefined){
+		elem.classList.add(fullscreenClass);
+		elem = elem.parentNode;
+	}
+
+	createMainStyle();
+
+	// Resize all top frames
+	if(window != window.top){
+		if(debugging) console.log("Searching for frame: " + window.location.href);
+		chrome.runtime.sendMessage({subWindow: window.location.href});
+	}
+}
 
 // Format Link to prevent mistakes with http/https
 function getFormattedSource(src){
 	return src.replace(/^https?\:\/\//i, "").replace(/^http?\:\/\//i, "");
 }
 
-// Find Video in Website: HTML5, FLASH, EMBEDED
+// Find Videos in Website: HTML5, FLASH, EMBEDED
 function findVideos(){
 	// Search HTML5 Videos
-	var html5Vid = document.querySelectorAll("video");
+	var	vid = document.querySelector("object[type='application/x-shockwave-flash']");
 
-	// Search OBJECT/Flash Videos
-	var objVid = document.querySelectorAll("object");
+	// Search Flash Videos
+	if(vid == null){
+		vid = document.querySelector("video");
 
-	// Search EMBEDed Videos
-	var embVid = document.querySelectorAll("embed");
+		// Search EMBEDed Videos
+		if(vid == null){
+			vid = document.querySelector("embed");
+		}
+	}
 
-	// Combine Videos into one array
-	var videos = new array();
-	videos.concat(html5Vid);
-	videos.concat(objVid);
-	videos.concat(embVid);
-
-	return (videos.length == 0) ? null : videos;
+	return vid;
 }
 
 // Create Main Styles used by Extension
 function createMainStyle(){
+	if(document.querySelector("#" + styleID) != null) return;
+
 	var style = document.createElement("style");
 	style.id = styleID;
 
