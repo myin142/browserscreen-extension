@@ -1,58 +1,68 @@
+//TODO Handle Double IFRAMEs/OBJECTs
+//TODO Handle multiple video sources
+var debugging = true;
+
 var videoClass = "browserscreen_VideoIDClass";
 var fullscreenClass = "browserscreen_FullscreenVideoClass";
 var styleID = "browserscreen_VideoStyleID";
 
 chrome.runtime.onMessage.addListener(function(msg){
+	var videos = null;
 
-	// On Extension Button Click
-	if(msg.message == "button_clicked"){
-		var style = document.querySelector("#" + styleID);
+	// Find Videos on Website
+	if(msg.search){
+		videos = findVideos();
 
-		// Find Video in Window and resize
-		if(style == null){
-			var video = findVideo();
-
-			// No Video Found
-			if(video == null){
-				console.log("No Video could be found.");
-			}
-
-			// Found a Video
-			else{
-				console.log("Found a video");
-				createMainStyle();
-				video.classList.add(videoClass);
-
-				// Add video class to all parents
-				var elem = video;
-				while(elem != null && elem.classList != undefined){
-					elem.classList.add(fullscreenClass);
-					elem = elem.parentNode;
-				}
-
-				// Send message to top frame
-				if(window != window.top)
-					chrome.runtime.sendMessage({iframe: window.location.href});
-			}
+		if(debugging){
+			console.log("Searching in Window");
+			console.log(videos);
 		}
 
-		// Video Restore on all Windows
+		// No Video Found
+		if(videos == null){
+			console.log("No Videos could be found.");
+		}
+
+		// Found a Video
 		else{
-			removeMainStyle();
-			console.log("Restore Video");
-			video.classList.remove(videoClass);
-
-			// Remove all parent elements with video class
-			var elem = video;
-			while(elem != undefined && elem.classList.contains(fullscreenClass)){
-				elem.classList.remove(fullscreenClass);
-				elem = elem.parentNode;
-			}
-
-			// Fix Youtube offset error
-			window.dispatchEvent(new Event("resize"));
-
+			chrome.runtime.sendMessage({found: true});
 		}
+	}
+/*
+	// Resize Videos
+	else if(videos != null && msg.resize){
+		createMainStyle();
+		video.classList.add(videoClass);
+
+		// Add video class to all parents
+		var elem = video;
+		while(elem != null && elem.classList != undefined){
+			elem.classList.add(fullscreenClass);
+			elem = elem.parentNode;
+		}
+
+		// Send message to top frame
+		if(window != window.top)
+			chrome.runtime.sendMessage({iframe: window.location.href});
+	}
+
+	// Restore Videos
+	else if(videos != null && msg.restore){
+		removeMainStyle();
+		console.log("Restore Video");
+
+		var video = document.querySelector("." + videoClass);
+		if(video != null) video.classList.remove(videoClass);
+
+		// Remove all parent elements with video class
+		var elem = video;
+		while(elem != null && elem.classList != undefined && elem.classList.contains(fullscreenClass)){
+			elem.classList.remove(fullscreenClass);
+			elem = elem.parentNode;
+		}
+
+		// Fix Youtube offset error
+		window.dispatchEvent(new Event("resize"));
 	}
 
 	// On Message from an IFRAME
@@ -68,7 +78,7 @@ chrome.runtime.onMessage.addListener(function(msg){
 
 		createMainStyle();
 	}
-
+*/
 });
 
 // Format Link to prevent mistakes with http/https
@@ -76,12 +86,24 @@ function getFormattedSource(src){
 	return src.replace(/^https?\:\/\//i, "").replace(/^http?\:\/\//i, "");
 }
 
-// Find Video in Website: HTML5,
-function findVideo(){
-	var vid = document.querySelector("video");
-	if(vid != null) return vid;
+// Find Video in Website: HTML5, FLASH, EMBEDED
+function findVideos(){
+	// Search HTML5 Videos
+	var html5Vid = document.querySelectorAll("video");
 
-	console.log("No HTML5 video found.");
+	// Search OBJECT/Flash Videos
+	var objVid = document.querySelectorAll("object");
+
+	// Search EMBEDed Videos
+	var embVid = document.querySelectorAll("embed");
+
+	// Combine Videos into one array
+	var videos = new array();
+	videos.concat(html5Vid);
+	videos.concat(objVid);
+	videos.concat(embVid);
+
+	return (videos.length == 0) ? null : videos;
 }
 
 // Create Main Styles used by Extension
