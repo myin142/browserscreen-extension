@@ -1,7 +1,3 @@
-if(performance.navigation.type == 1){
-	chrome.runtime.sendMessage({reload: true});
-}
-
 var debugging = true;
 
 var videoClass = "browserscreen_VideoIDClass";
@@ -9,7 +5,6 @@ var fullscreenClass = "browserscreen_FullscreenVideoClass";
 var styleID = "browserscreen_VideoStyleID";
 
 chrome.runtime.onMessage.addListener(function(msg){
-	var video = null;
 	if(debugging) console.log("Window: " + window.location.href);
 
 	// Resize Video
@@ -30,17 +25,15 @@ chrome.runtime.onMessage.addListener(function(msg){
 			console.log(vid);
 		}
 		chrome.runtime.sendMessage({found: true}, function(response){
-			video = vid;
-
 			if(debugging){
 				console.log("Resize Video");
-				console.log(video);
+				console.log(vid);
 			}
 
-			video.classList.add(videoClass);
+			vid.classList.add(videoClass);
 
 			// Resize Video and all top frames
-			resizeElements(video);
+			resizeElements(vid);
 		});
 
 		// Found multiple Videos in one Window
@@ -54,14 +47,15 @@ chrome.runtime.onMessage.addListener(function(msg){
 	else if(msg.restore){
 		if(debugging) console.log("Restore Video");
 
-		if(video != null){
-			video.classList.remove(videoClass);
+		var vid = document.querySelector("." + videoClass);
+		restoreElements();
+
+		if(vid != null){
+			vid.classList.remove(videoClass);
 
 			// Fix Youtube offset error
 			window.dispatchEvent(new Event("resize"));
 		}
-
-		restoreElements();
 	}
 
 	// On Message from an IFRAME/OBJECT
@@ -151,7 +145,7 @@ function getFormattedSource(src){
 	return src.replace(/^https?\:\/\//i, "").replace(/^http?\:\/\//i, "");
 }
 
-// Find Videos in Website: HTML5, FLASH, EMBEDED
+// Find Videos in Website: FLASH, HTML5, EMBEDED
 function findVideos(){
 	// Search HTML5 Videos
 	var	vid = document.querySelector("object[type='application/x-shockwave-flash']");

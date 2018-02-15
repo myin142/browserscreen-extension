@@ -21,11 +21,6 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	if(message.subWindow){
 		chrome.tabs.sendMessage(sender.tab.id, {subWindow: message.subWindow});
 	}
-
-	if(message.reload){
-		console.log("Reloaded");
-		resized = false;
-	}
 });
 
 chrome.browserAction.onClicked.addListener(function(tab){
