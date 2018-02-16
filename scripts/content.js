@@ -5,6 +5,8 @@ var fullscreenClass = "browserscreen_FullscreenVideoClass";
 var styleID = "browserscreen_VideoStyleID";
 var controlsID = "browserscreen_VideoControlsID";
 
+var playBtnID = "play-button";
+
 chrome.runtime.onMessage.addListener(function(msg){
 	if(debugging) console.log("Window: " + window.location.href);
 
@@ -42,8 +44,10 @@ chrome.runtime.onMessage.addListener(function(msg){
 			resizeElements(vid);
 
 			// Create Video Controls
-			if(vid.tagName == "VIDEO")
-				createControls();
+			if(vid.tagName == "VIDEO"){
+				if(debugging) console.log("Creating Controls");
+				createControls(vid);
+			}
 		});
 	}
 
@@ -95,8 +99,36 @@ chrome.runtime.onMessage.addListener(function(msg){
 
 });
 
-function createControls(){
-	if(debugging) console.log("Creating Controls");
+function createControls(video){
+	var controls = document.createElement("DIV");
+	controls.id = controlsID;
+
+	// Create Play/Pause Button
+    var playBtn = document.createElement("BUTTON");
+	playBtn.id = playBtnID;
+	playBtn.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="rgb(255,255,255)"/></svg>';
+	(video.paused) ? pauseVideo(playBtn) : playVideo(playBtn);
+	playBtn.addEventListener("click", function(){
+		var label = playBtn.getAttribute("aria-label");
+		(label == "pause") ? pauseVideo(playBtn) : playVideo(playBtn);
+	});
+
+	controls.appendChild(playBtn);
+	document.body.appendChild(controls);
+}
+
+function pauseVideo(btn){
+    var playBtn = "M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z";
+    btn.setAttribute("aria-label", "play");
+    btn.querySelector("path").setAttribute("d", playBtn);
+	document.querySelector("." + videoClass).pause();
+}
+
+function playVideo(btn){
+    var pauseBtn = "M 12,26 16,26 16,10 12,10 z M 21,26 25,26 25,10 21,10 z";
+    btn.setAttribute("aria-label", "pause");
+    btn.querySelector("path").setAttribute("d", pauseBtn);
+	document.querySelector("." + videoClass).play();
 }
 
 function removeControls(){
@@ -202,6 +234,13 @@ function createMainStyle(){
 			max-height: 100% !important;
 			transform: none !important;
 			background: black !important;
+		}
+		#`+controlsID+`{
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			z-Index: 2147483647;
 		}
 	`;
 	style.innerHTML = css;
