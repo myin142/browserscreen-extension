@@ -3,12 +3,25 @@ var debugging = true;
 var videoClass = "browserscreen_VideoIDClass";
 var fullscreenClass = "browserscreen_FullscreenVideoClass";
 var styleID = "browserscreen_VideoStyleID";
+var controlsID = "browserscreen_VideoControlsID";
 
 chrome.runtime.onMessage.addListener(function(msg){
 	if(debugging) console.log("Window: " + window.location.href);
 
+	// Check if resize or restore
+	if(msg.start && window == window.top){
+		if(debugging) console.log("Checking Resize/Restore");
+
+		var style = document.querySelector("#" + styleID);
+		if(style == null){
+			chrome.runtime.sendMessage({resize: true});
+		}else{
+			chrome.runtime.sendMessage({restore: true});
+		}
+	}
+
 	// Resize Video
-	if(msg.resize){
+	else if(msg.resize){
 		if(debugging) console.log("Searching in Window");
 
 		var vid = findVideos();
@@ -27,6 +40,10 @@ chrome.runtime.onMessage.addListener(function(msg){
 			// Resize Video and all top frames
 			vid.classList.add(videoClass);
 			resizeElements(vid);
+
+			// Create Video Controls
+			if(vid.tagName == "VIDEO")
+				createControls();
 		});
 	}
 
@@ -36,6 +53,7 @@ chrome.runtime.onMessage.addListener(function(msg){
 
 		var vid = document.querySelector("." + videoClass);
 		restoreElements();
+		removeControls();
 
 		if(vid != null){
 			vid.classList.remove(videoClass);
@@ -71,9 +89,20 @@ chrome.runtime.onMessage.addListener(function(msg){
 			}
 			return;
 		}
+
+		if(debugging) console.log("Nothing Found");
 	}
 
 });
+
+function createControls(){
+	if(debugging) console.log("Creating Controls");
+}
+
+function removeControls(){
+	var controls = document.querySelector("#" + controlsID);
+	if(controls != null) controls.parentNode.removeChild(controls);
+}
 
 // Search for Link in IFRAMEs
 function searchIFrames(link){
