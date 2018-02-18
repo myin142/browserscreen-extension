@@ -13,6 +13,7 @@ function MediaControls(video, prefix){
         timeTotal: prefix + "time-total",
 
         qualityLabel: prefix + "quality-label",
+        playSpeed: prefix + "playback-speed",
 
         leftContainer: prefix + "controls-leftContainer",
         rightContainer: prefix + "controls-rightContainer",
@@ -21,9 +22,19 @@ function MediaControls(video, prefix){
     // Values for Elements
     var values = {
         controlsHeight: 36,
+        buttonWidth: 46,
         sliderWidth: 52,
         sliderHandleSize: 12,
-        sliderBarHeight: 3
+        sliderBarHeight: 3,
+
+        playbackRates: [
+            0.25,
+            0.5,
+            1,
+            1.25,
+            1.5,
+            2
+        ]
     }
 
     // Create Container
@@ -45,8 +56,10 @@ function MediaControls(video, prefix){
     // Create UI Elements of Right Container
     var rightContainer = document.createElement("DIV");
     var fullscreenBtn = createFullscreenButton();
+    var playSpeedBtn = createPlaySpeedButton();
     var qualityLabel = createQualityLabel();
     rightContainer.appendChild(qualityLabel);
+    rightContainer.appendChild(playSpeedBtn);
     rightContainer.appendChild(fullscreenBtn);
     rightContainer.classList.add(identifiers.rightContainer);
 
@@ -84,6 +97,7 @@ function MediaControls(video, prefix){
         video.addEventListener("timeupdate", videoTimeListener);
         video.addEventListener("loadedmetadata", videoMetadataListener);
         video.addEventListener("webkitfullscreenchange", videoFullscreenListener);
+        video.addEventListener("ratechange", videoRateListener);
     }
     /*function videoClickListener(){
         if(video.paused){
@@ -131,6 +145,10 @@ function MediaControls(video, prefix){
     function videoFullscreenListener(){
         (document.webkitFullscreenElement == video) ? changeExitFull(fullscreenBtn) : changeFullscreen(fullscreenBtn);
     }
+    function videoRateListener(){
+        var rateText = playSpeedBtn.querySelector("SPAN");
+        rateText.innerHTML = video.playbackRate + "x";
+    }
 
     function createStyle(){
         var css = `
@@ -148,21 +166,25 @@ function MediaControls(video, prefix){
                 text-shadow: 0 0 2px rgba(0,0,0,.5);
                 height: `+values.controlsHeight+`px;
                 line-height: `+values.controlsHeight+`px;
-                background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.2));
+                background: rgba(0,0,0,0.6);
                 justify-content: space-between;
-                color: white;
+                color: #CCC;
                 font-size: 12px;
+                text-align: center;
+                -webkit-user-select: none;
             }
             .`+identifiers.leftContainer+`, .`+identifiers.rightContainer+`{
                 display: inline-flex;
             }
-            .`+identifiers.buttons+`{
+            .`+identifiers.buttons+`, .`+identifiers.playSpeed+`, .`+identifiers.playSpeed+` ul{
                 border: none;
                 background: none;
                 cursor: pointer;
                 outline: 0;
-                width: 46px;
+                width: `+values.buttonWidth+`px;
                 padding: 0;
+                margin: 0;
+                position: relative;
             }
             .`+identifiers.buttons+`:hover path{
                 fill: white;
@@ -204,6 +226,27 @@ function MediaControls(video, prefix){
             .`+identifiers.timeDisplay+`{
                 padding: 0 0.7em;
             }
+            .`+identifiers.qualityLabel+`{
+                padding: 0 0.7em;
+            }
+            .`+identifiers.playSpeed+` ul{
+                position: absolute;
+                bottom: `+(values.controlsHeight + 5)+`px;
+                left: 0;
+                list-style: none;
+                line-height: 28px;
+                display: none;
+                background: rgba(0,0,0,0.6);
+            }
+            .`+identifiers.playSpeed+` li:hover{
+                background: rgba(60,60,60,0.8);
+            }
+            .`+identifiers.playSpeed+` span{
+                display: block;
+            }
+            .`+identifiers.playSpeed+` span:hover{
+                color: white;
+            }
         `;
 
         var style = document.createElement("STYLE");
@@ -220,14 +263,49 @@ function MediaControls(video, prefix){
         video.removeEventListener("timeupdate", videoTimeListener);
         video.removeEventListener("loadedmetadata", videoMetadataListener);
         video.removeEventListener("webkitfullscreenchange", videoFullscreenListener);
+        video.removeEventListener("ratechange", videoRateListener);
     }
 
     /*** Controls UI ***/
     function createSvgButton(){
         var btn = document.createElement("BUTTON");
         btn.classList.add(identifiers.buttons);
-        btn.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#eee"/></svg>';
+        btn.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#CCC"/></svg>';
         return btn;
+    }
+
+    // Playback Speed Button
+    function createPlaySpeedButton(){
+        var container = document.createElement("DIV");
+        container.classList.add(identifiers.playSpeed);
+
+        var currRate = document.createElement("SPAN");
+        currRate.innerHTML = video.playbackRate + "x";
+        container.appendChild(currRate);
+
+        var playbackOptions = document.createElement("UL");
+        for(var i = 0; i < values.playbackRates.length; i++){
+            var option = document.createElement("LI");
+            option.innerHTML = values.playbackRates[i];
+            playbackOptions.appendChild(option);
+        }
+        container.appendChild(playbackOptions);
+
+        currRate.addEventListener("click", function(){
+            toggleDisplay(playbackOptions);
+        });
+
+        playbackOptions.addEventListener("click", function(e){
+            var target = e.srcElement;
+            video.playbackRate = target.innerHTML;
+            toggleDisplay(playbackOptions);
+        });
+
+        return container;
+    }
+    function toggleDisplay(elem){
+        var display = elem.style.display;
+        elem.style.display = (display == "block") ? "none" : "block";
     }
 
     // Quality Button
