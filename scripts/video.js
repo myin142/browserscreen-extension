@@ -29,6 +29,7 @@ function MediaControls(video, prefix){
     var volBtn = createVolumeButton();
     var volSlide = createVolumeSlider();
     var timeLabel = createTimeLabel();
+    var fullscreenBtn = createFullscreenButton();
 
     // Add Listeners to Video and add Style
     addVideoListeners();
@@ -54,6 +55,7 @@ function MediaControls(video, prefix){
     container.appendChild(volBtn);
     container.appendChild(volSlide);
     container.appendChild(timeLabel);
+    container.appendChild(fullscreenBtn);
     return container;
 
     // Video Listeners
@@ -64,6 +66,7 @@ function MediaControls(video, prefix){
         video.addEventListener("play", videoPlayListener);
         video.addEventListener("pause", videoPauseListener);
         video.addEventListener("timeupdate", videoTimeListener);
+        video.addEventListener("webkitfullscreenchange", videoFullscreenListener);
     }
     /*function videoClickListener(){
         if(video.paused){
@@ -101,6 +104,9 @@ function MediaControls(video, prefix){
         if(currTimeLabel.innerHTML != time)
             currTimeLabel.innerHTML = time;
     }
+    function videoFullscreenListener(){
+        (document.webkitFullscreenElement == video) ? changeExitFull(fullscreenBtn) : changeFullscreen(fullscreenBtn);
+    }
 
     function createStyle(){
         var css = `
@@ -119,6 +125,7 @@ function MediaControls(video, prefix){
                 height: `+values.controlsHeight+`px;
                 line-height: `+values.controlsHeight+`px;
                 background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.2));
+                pointer-events: auto;
             }
             .`+identifiers.buttons+`{
                 border: none;
@@ -127,6 +134,9 @@ function MediaControls(video, prefix){
                 outline: 0;
                 width: 46px;
                 padding: 0;
+            }
+            .`+identifiers.buttons+`:hover path{
+                fill: white;
             }
             .`+identifiers.slider+`{
                 display: inline-block;
@@ -180,14 +190,41 @@ function MediaControls(video, prefix){
         video.removeEventListener("volumechange", videoVolumeListener);
         video.removeEventListener("play", videoPlayListener);
         video.removeEventListener("pause", videoPauseListener);
+        video.removeEventListener("timeupdate", videoTimeListener);
+        video.removeEventListener("webkitfullscreenchange", videoFullscreenListener);
     }
 
     /*** Controls UI ***/
     function createSvgButton(){
         var btn = document.createElement("BUTTON");
         btn.classList.add(identifiers.buttons);
-        btn.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#fff"/></svg>';
+        btn.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#eee"/></svg>';
         return btn;
+    }
+
+    // Fullscreen Button
+    function createFullscreenButton(){
+        var btn = createSvgButton();
+        (document.webkitFullscreenElement == video) ? changeExitFull(btn) : changeFullscreen(btn);
+        btn.addEventListener("click", function(){
+            var label = btn.getAttribute("aria-label");
+            if(label == "Fullscreen"){
+                video.webkitRequestFullscreen();
+            }else{
+                document.webkitExitFullscreen();
+            }
+        });
+        return btn;
+    }
+    function changeFullscreen(btn){
+        var fullscreen = "M 10 16 L 12 16 L 12 12 L 16 12 L 16 10 L 10 10 L 10 16 L 10 16 Z  M 12 20 L 10 20 L 10 26 L 16 26 L 16 24 L 12 24 L 12 20 L 12 20 Z  M 26 16 L 24 16 L 24 12 L 20 12 L 20 10 L 26 10 L 26 16 L 26 16 Z  M 24 20 L 26 20 L 26 26 L 20 26 L 20 24 L 24 24 L 24 20 L 24 20 Z";
+        btn.setAttribute("aria-label", "Fullscreen");
+        btn.querySelector("path").setAttribute("d", fullscreen);
+    }
+    function changeExitFull(btn){
+        var exitFull = "M 14 14 L 10 14 L 10 16 L 16 16 L 16 10 L 14 10 L 14 14 L 14 14 Z  M 22 14 L 22 10 L 20 10 L 20 16 L 26 16 L 26 14 L 22 14 L 22 14 Z  M 20 26 L 22 26 L 22 22 L 26 22 L 26 20 L 20 20 L 20 26 L 20 26 Z  M 10 22 L 14 22 L 14 26 L 16 26 L 16 20 L 10 20 L 10 22 L 10 22 Z";
+        btn.setAttribute("aria-label", "Exit Fullscreen");
+        btn.querySelector("path").setAttribute("d", exitFull);
     }
 
     // Time Display

@@ -104,20 +104,6 @@ function createControls(video){
     document.body.appendChild(mControls);
 }
 
-function pauseVideo(btn){
-    var playBtn = "M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z";
-    btn.setAttribute("aria-label", "play");
-    btn.querySelector("path").setAttribute("d", playBtn);
-	document.querySelector("." + videoClass).pause();
-}
-
-function playVideo(btn){
-    var pauseBtn = "M 12,26 16,26 16,10 12,10 z M 21,26 25,26 25,10 21,10 z";
-    btn.setAttribute("aria-label", "pause");
-    btn.querySelector("path").setAttribute("d", pauseBtn);
-	document.querySelector("." + videoClass).play();
-}
-
 function removeControls(){
 	if(mControls != null){
 		if(debugging) console.log("Removing Controls");
@@ -155,7 +141,7 @@ function restoreElements(){
 	removeMainStyle();
 
 	// Remove Fullscreen Classes
-	var elems = document.querySelectorAll(fullscreenClass);
+	var elems = document.querySelectorAll("."+fullscreenClass);
 	for(var i = 0; i < elems.length; i++){
 		elems[i].classList.remove(fullscreenClass);
 	}
