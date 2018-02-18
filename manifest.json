@@ -12,7 +12,7 @@
 	"version": "1.0",
 
 	"content_scripts":[
-		{"js": ["scripts/content.js"],"matches": ["*://*/*"], "all_frames": true}
+		{"js": ["scripts/video.js", "scripts/content.js"],"matches": ["*://*/*"], "all_frames": true}
 	],
 	"background": {
 		"scripts": ["scripts/background.js"],

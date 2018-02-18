@@ -5,7 +5,7 @@ var fullscreenClass = "browserscreen_FullscreenVideoClass";
 var styleID = "browserscreen_VideoStyleID";
 var controlsID = "browserscreen_VideoControlsID";
 
-var playBtnID = "play-button";
+var mControls = null;
 
 chrome.runtime.onMessage.addListener(function(msg){
 	if(debugging) console.log("Window: " + window.location.href);
@@ -100,21 +100,8 @@ chrome.runtime.onMessage.addListener(function(msg){
 });
 
 function createControls(video){
-	var controls = document.createElement("DIV");
-	controls.id = controlsID;
-
-	// Create Play/Pause Button
-    var playBtn = document.createElement("BUTTON");
-	playBtn.id = playBtnID;
-	playBtn.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="rgb(255,255,255)"/></svg>';
-	(video.paused) ? pauseVideo(playBtn) : playVideo(playBtn);
-	playBtn.addEventListener("click", function(){
-		var label = playBtn.getAttribute("aria-label");
-		(label == "pause") ? pauseVideo(playBtn) : playVideo(playBtn);
-	});
-
-	controls.appendChild(playBtn);
-	document.body.appendChild(controls);
+    mControls = MediaControls(video);
+    document.body.appendChild(mControls);
 }
 
 function pauseVideo(btn){
@@ -132,8 +119,11 @@ function playVideo(btn){
 }
 
 function removeControls(){
-	var controls = document.querySelector("#" + controlsID);
-	if(controls != null) controls.parentNode.removeChild(controls);
+	if(mControls != null){
+		if(debugging) console.log("Removing Controls");
+		mControls.removeControls();
+		mControls = null;
+	}
 }
 
 // Search for Link in IFRAMEs
