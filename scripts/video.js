@@ -12,6 +12,8 @@ function MediaControls(video, prefix){
         timeCurr: prefix + "time-current",
         timeTotal: prefix + "time-total",
 
+        qualityLabel: prefix + "quality-label",
+
         leftContainer: prefix + "controls-leftContainer",
         rightContainer: prefix + "controls-rightContainer",
     }
@@ -43,8 +45,8 @@ function MediaControls(video, prefix){
     // Create UI Elements of Right Container
     var rightContainer = document.createElement("DIV");
     var fullscreenBtn = createFullscreenButton();
-    var qualityBtn = createQualityButton();
-    rightContainer.appendChild(qualityBtn);
+    var qualityLabel = createQualityLabel();
+    rightContainer.appendChild(qualityLabel);
     rightContainer.appendChild(fullscreenBtn);
     rightContainer.classList.add(identifiers.rightContainer);
 
@@ -122,6 +124,9 @@ function MediaControls(video, prefix){
     function videoMetadataListener(){
         var tTotal = timeLabel.querySelector("." + identifiers.timeTotal);
         tTotal.innerHTML = getTotalTime();
+
+        qualityLabel.removeChild(qualityLabel.firstChild);
+        qualityLabel.appendChild(getQuality());
     }
     function videoFullscreenListener(){
         (document.webkitFullscreenElement == video) ? changeExitFull(fullscreenBtn) : changeFullscreen(fullscreenBtn);
@@ -145,6 +150,8 @@ function MediaControls(video, prefix){
                 line-height: `+values.controlsHeight+`px;
                 background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.2));
                 justify-content: space-between;
+                color: white;
+                font-size: 12px;
             }
             .`+identifiers.leftContainer+`, .`+identifiers.rightContainer+`{
                 display: inline-flex;
@@ -195,8 +202,6 @@ function MediaControls(video, prefix){
                 width: `+values.sliderWidth+`px;
             }
             .`+identifiers.timeDisplay+`{
-                color: white;
-                font-size: 12px;
                 padding: 0 0.7em;
             }
         `;
@@ -213,6 +218,7 @@ function MediaControls(video, prefix){
         video.removeEventListener("play", videoPlayListener);
         video.removeEventListener("pause", videoPauseListener);
         video.removeEventListener("timeupdate", videoTimeListener);
+        video.removeEventListener("loadedmetadata", videoMetadataListener);
         video.removeEventListener("webkitfullscreenchange", videoFullscreenListener);
     }
 
@@ -225,11 +231,17 @@ function MediaControls(video, prefix){
     }
 
     // Quality Button
-    function createQualityButton(){
-        var btn = createSvgButton();
-        console.log(video.videoWidth + "x" + video.videoHeight );
+    function createQualityLabel(){
+        var container = document.createElement("DIV");
+        container.classList.add(identifiers.qualityLabel);
+        container.appendChild(getQuality());
 
-        return btn;
+        return container;
+    }
+    function getQuality(){
+        var text = document.createElement("SPAN");
+        text.innerHTML = video.videoHeight + "p";
+        return text;
     }
 
     // Fullscreen Button
