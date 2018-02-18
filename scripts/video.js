@@ -10,6 +10,10 @@ function MediaControls(video, prefix){
 
         timeDisplay: prefix + "time-display",
         timeCurr: prefix + "time-current",
+        timeTotal: prefix + "time-total",
+
+        leftContainer: prefix + "controls-leftContainer",
+        rightContainer: prefix + "controls-rightContainer",
     }
 
     // Values for Elements
@@ -24,12 +28,25 @@ function MediaControls(video, prefix){
     var container = document.createElement("DIV");
     container.id = identifiers.container;
 
-    // Create UI Elements
+    // Create UI Elements of Left Container
+    var leftContainer = document.createElement("DIV");
     var playBtn = createPlayButton();
     var volBtn = createVolumeButton();
     var volSlide = createVolumeSlider();
     var timeLabel = createTimeLabel();
+    leftContainer.appendChild(playBtn);
+    leftContainer.appendChild(volBtn);
+    leftContainer.appendChild(volSlide);
+    leftContainer.appendChild(timeLabel);
+    leftContainer.classList.add(identifiers.leftContainer);
+
+    // Create UI Elements of Right Container
+    var rightContainer = document.createElement("DIV");
     var fullscreenBtn = createFullscreenButton();
+    var qualityBtn = createQualityButton();
+    rightContainer.appendChild(qualityBtn);
+    rightContainer.appendChild(fullscreenBtn);
+    rightContainer.classList.add(identifiers.rightContainer);
 
     // Add Listeners to Video and add Style
     addVideoListeners();
@@ -51,11 +68,8 @@ function MediaControls(video, prefix){
     /* END OF PUBLIC FUNCTION */
 
     // Append Elements to Container
-    container.appendChild(playBtn);
-    container.appendChild(volBtn);
-    container.appendChild(volSlide);
-    container.appendChild(timeLabel);
-    container.appendChild(fullscreenBtn);
+    container.appendChild(leftContainer);
+    container.appendChild(rightContainer);
     return container;
 
     // Video Listeners
@@ -66,6 +80,7 @@ function MediaControls(video, prefix){
         video.addEventListener("play", videoPlayListener);
         video.addEventListener("pause", videoPauseListener);
         video.addEventListener("timeupdate", videoTimeListener);
+        video.addEventListener("loadedmetadata", videoMetadataListener);
         video.addEventListener("webkitfullscreenchange", videoFullscreenListener);
     }
     /*function videoClickListener(){
@@ -104,6 +119,10 @@ function MediaControls(video, prefix){
         if(currTimeLabel.innerHTML != time)
             currTimeLabel.innerHTML = time;
     }
+    function videoMetadataListener(){
+        var tTotal = timeLabel.querySelector("." + identifiers.timeTotal);
+        tTotal.innerHTML = getTotalTime();
+    }
     function videoFullscreenListener(){
         (document.webkitFullscreenElement == video) ? changeExitFull(fullscreenBtn) : changeFullscreen(fullscreenBtn);
     }
@@ -125,7 +144,10 @@ function MediaControls(video, prefix){
                 height: `+values.controlsHeight+`px;
                 line-height: `+values.controlsHeight+`px;
                 background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.2));
-                pointer-events: auto;
+                justify-content: space-between;
+            }
+            .`+identifiers.leftContainer+`, .`+identifiers.rightContainer+`{
+                display: inline-flex;
             }
             .`+identifiers.buttons+`{
                 border: none;
@@ -202,6 +224,14 @@ function MediaControls(video, prefix){
         return btn;
     }
 
+    // Quality Button
+    function createQualityButton(){
+        var btn = createSvgButton();
+        console.log(video.videoWidth + "x" + video.videoHeight );
+
+        return btn;
+    }
+
     // Fullscreen Button
     function createFullscreenButton(){
         var btn = createSvgButton();
@@ -238,6 +268,7 @@ function MediaControls(video, prefix){
 
         var totalTime = document.createElement("SPAN");
         totalTime.innerHTML = getTotalTime();
+        totalTime.classList.add(identifiers.timeTotal);
 
         var separator = getSeparator();
 
