@@ -100,7 +100,7 @@ chrome.runtime.onMessage.addListener(function(msg){
 });
 
 function createControls(video){
-    mControls = MediaControls(video);
+    mControls = MediaControls(video, "browserscreen");
     document.body.appendChild(mControls);
 }
 

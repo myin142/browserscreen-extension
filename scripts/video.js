@@ -6,7 +6,10 @@ function MediaControls(video, prefix){
         container: prefix + "videoControls",
         buttons: prefix + "controls-btn",
         slider: prefix + "volume-slider",
-        sliderHandle: prefix + "volume-slider-handle"
+        sliderHandle: prefix + "volume-slider-handle",
+
+        timeDisplay: prefix + "time-display",
+        timeCurr: prefix + "time-current",
     }
 
     // Values for Elements
@@ -25,7 +28,7 @@ function MediaControls(video, prefix){
     var playBtn = createPlayButton();
     var volBtn = createVolumeButton();
     var volSlide = createVolumeSlider();
-    var time
+    var timeLabel = createTimeLabel();
 
     // Add Listeners to Video and add Style
     addVideoListeners();
@@ -50,6 +53,7 @@ function MediaControls(video, prefix){
     container.appendChild(playBtn);
     container.appendChild(volBtn);
     container.appendChild(volSlide);
+    container.appendChild(timeLabel);
     return container;
 
     // Video Listeners
@@ -59,6 +63,7 @@ function MediaControls(video, prefix){
         video.addEventListener("volumechange", videoVolumeListener);
         video.addEventListener("play", videoPlayListener);
         video.addEventListener("pause", videoPauseListener);
+        video.addEventListener("timeupdate", videoTimeListener);
     }
     /*function videoClickListener(){
         if(video.paused){
@@ -90,6 +95,12 @@ function MediaControls(video, prefix){
     function videoPauseListener(){
         changePlay(playBtn);
     }
+    function videoTimeListener(){
+        var currTimeLabel = timeLabel.querySelector("." + identifiers.timeCurr);
+        var time = getCurrentTime();
+        if(currTimeLabel.innerHTML != time)
+            currTimeLabel.innerHTML = time;
+    }
 
     function createStyle(){
         var css = `
@@ -97,11 +108,13 @@ function MediaControls(video, prefix){
                 display: none !important;
             }
             #`+identifiers.container+`{
+                display: inline-flex;
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 right: 0;
                 z-Index: 2147483647;
+                font-family: Roboto, Arial, sans-serif;
                 text-shadow: 0 0 2px rgba(0,0,0,.5);
                 height: `+values.controlsHeight+`px;
                 line-height: `+values.controlsHeight+`px;
@@ -112,6 +125,8 @@ function MediaControls(video, prefix){
                 background: none;
                 cursor: pointer;
                 outline: 0;
+                width: 46px;
+                padding: 0;
             }
             .`+identifiers.slider+`{
                 display: inline-block;
@@ -147,6 +162,11 @@ function MediaControls(video, prefix){
                 margin-top: -2px;
                 width: `+values.sliderWidth+`px;
             }
+            .`+identifiers.timeDisplay+`{
+                color: white;
+                font-size: 12px;
+                padding: 0 0.7em;
+            }
         `;
 
         var style = document.createElement("STYLE");
@@ -155,7 +175,7 @@ function MediaControls(video, prefix){
         return style;
     }
     function removeListeners(){
-        video.removeEventListener("click", videoClickListener);
+        //video.removeEventListener("click", videoClickListener);
         video.removeEventListener("ended", videoEndedListener);
         video.removeEventListener("volumechange", videoVolumeListener);
         video.removeEventListener("play", videoPlayListener);
@@ -168,6 +188,47 @@ function MediaControls(video, prefix){
         btn.classList.add(identifiers.buttons);
         btn.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#fff"/></svg>';
         return btn;
+    }
+
+    // Time Display
+    function createTimeLabel(){
+        var timeDisplay = document.createElement("DIV");
+        timeDisplay.classList.add(identifiers.timeDisplay);
+
+        var currTime = document.createElement("SPAN");
+        currTime.innerHTML = getCurrentTime();
+        currTime.classList.add(identifiers.timeCurr);
+
+        var totalTime = document.createElement("SPAN");
+        totalTime.innerHTML = getTotalTime();
+
+        var separator = getSeparator();
+
+        timeDisplay.appendChild(currTime);
+        timeDisplay.appendChild(separator);
+        timeDisplay.appendChild(totalTime);
+        return timeDisplay;
+    }
+    function getCurrentTime(){
+        var time = video.currentTime;
+        return normalizeTime(time);
+    }
+    function getTotalTime(){
+        var time = video.duration;
+        return normalizeTime(time);
+    }
+    function getSeparator(){
+        var sep = document.createElement("SPAN");
+        sep.innerHTML = " / ";
+        return sep;
+    }
+    function normalizeTime(time){
+        var minutes = Math.floor(time / 60);
+        var seconds = Math.floor(time - minutes * 60);
+        var x = (minutes < 10) ? "0" + minutes : minutes;
+        var y = (seconds < 10) ? "0" + seconds : seconds;
+
+        return x + ":" + y;
     }
 
     // Volume Slider
