@@ -25,7 +25,7 @@ function MediaControls(video, prefix){
         currBuffer: prefix + "curr-buffered-bar",
         previewTime: prefix + "progress-bar-time",
 
-        loading: prefix + "loading-icon"
+        loading: prefix + "loading-icon",
     }
 
     // Values for Elements
@@ -40,6 +40,8 @@ function MediaControls(video, prefix){
 
         loadingSize: 80,
         loadingBorder: 5,
+
+        idler: 0,
 
         playbackRates: [
             0.25,
@@ -110,19 +112,16 @@ function MediaControls(video, prefix){
         if(style != null) style.parentNode.removeChild(style);
 
         removeListeners();
+        video.style.cursor = "";
     };
 
     /* END OF PUBLIC FUNCTION */
 
-    displayLoading();
+    var idleInterval = startIdler();
     return container;
-
-    //TODO Progress Bar
-    //TODO Loading Icon on waiting
 
     // Video Listeners
     function addVideoListeners(){
-        //video.addEventListener("click", videoClickListener);
         video.addEventListener("ended", videoEndedListener);
         video.addEventListener("volumechange", videoVolumeListener);
         video.addEventListener("play", videoPlayListener);
@@ -134,14 +133,11 @@ function MediaControls(video, prefix){
         video.addEventListener("progress", videoProgressListener);
         video.addEventListener("waiting", videoWaitListener);
         video.addEventListener("playing", videoPlayingListener);
+        video.addEventListener("mouseleave", videoMouseLeaveListener);
+        video.addEventListener("mouseenter", videoMouseEnterListener);
+        video.addEventListener("mousemove", videoMouseMoveListener);
+        container.addEventListener("mousemove", videoMouseMoveListener);
     }
-    /*function videoClickListener(){
-        if(video.paused){
-            video.play();
-        } else {
-            video.pause();
-        }
-    }*/
     function videoEndedListener(){
         changeReplay(playBtn);
     }
@@ -150,9 +146,11 @@ function MediaControls(video, prefix){
     }
     function videoPlayListener(){
         changePause(playBtn);
+        idleInterval = startIdler();
     }
     function videoPauseListener(){
         changePlay(playBtn);
+        showControls(1);
     }
     function videoTimeListener(){
         if(video.seeking || video.paused) return;
@@ -186,9 +184,28 @@ function MediaControls(video, prefix){
         displayLoading();
     }
     function videoPlayingListener(){
-        console.log("Can be played");
         var loading = container.querySelector("." + identifiers.loading);
-        loading.style.display = "none";
+        if(loading != null)
+            loading.style.display = "none";
+    }
+    function videoMouseLeaveListener(e){
+        if(!video.paused && !insideBoundary(e)){
+            showControls(0);
+        }
+    }
+    function videoMouseEnterListener(){
+        if(!video.paused){
+            showControls(1);
+        }
+    }
+    function videoMouseMoveListener(){
+        if(!video.paused){
+            if(isControls()){
+                values.idler = 0;
+            }else{
+                showControls(1);
+            }
+        }
     }
 
     function createStyle(){
@@ -209,6 +226,7 @@ function MediaControls(video, prefix){
                 -webkit-user-select: none;
                 line-height: `+values.controlsHeight+`px;
                 height: `+values.controlsHeight+`px;
+                transition: height .2s;
             }
             .`+identifiers.subContainer+`{
                 height: 100%;
@@ -274,10 +292,10 @@ function MediaControls(video, prefix){
             }
             .`+identifiers.playSpeed+` ul{
                 position: absolute;
-                bottom: `+(values.controlsHeight + 5)+`px;
+                bottom: `+(values.controlsHeight + values.progressContainer)+`px;
                 left: 0;
                 list-style: none;
-                line-height: 28px;
+                line-height: 25px;
                 display: none;
                 background: rgba(0,0,0,0.6);
             }
@@ -318,6 +336,7 @@ function MediaControls(video, prefix){
                 left: 0;
                 top: 0;
                 -webkit-transition: transform .5s;
+                transition: transform .5s;
                 transform-origin: 0% 50%;
                 transform: scaleX(0);
             }
@@ -391,7 +410,6 @@ function MediaControls(video, prefix){
         return style;
     }
     function removeListeners(){
-        //video.removeEventListener("click", videoClickListener);
         video.removeEventListener("ended", videoEndedListener);
         video.removeEventListener("volumechange", videoVolumeListener);
         video.removeEventListener("play", videoPlayListener);
@@ -402,9 +420,12 @@ function MediaControls(video, prefix){
         video.removeEventListener("ratechange", videoRateListener);
         video.removeEventListener("progress", videoProgressListener);
         video.removeEventListener("waiting", videoWaitListener);
+        video.removeEventListener("playing", videoPlayingListener);
+        video.removeEventListener("mouseleave", videoMouseLeaveListener);
+        video.removeEventListener("mouseenter", videoMouseEnterListener);
+        video.removeEventListener("mousemove", videoMouseMoveListener);
     }
     function displayLoading(){
-        console.log("Loading");
         var loading = container.querySelector("." + identifiers.loading);
         if(loading == null){
             loading = document.createElement("DIV");
@@ -415,6 +436,49 @@ function MediaControls(video, prefix){
         }else if(loading.style.display == "none"){
             loading.style.display = "block";
         }
+    }
+    function showControls(status){
+        video.style.cursor = (status) ? "" : "none";
+        container.style.height = (status) ? "" : "0px";
+
+        if(status && !video.paused && idleInterval == null){
+            idleInterval = startIdler();
+        }
+
+        if(!status){
+            clearInterval(idleInterval);
+            values.idler = 0;
+            idleInterval = null;
+        }
+    }
+    function isControls(){
+        return (container.style.height == "0px") ? false : true;
+    }
+    function insideBoundary(e){
+        var boundary = {
+            L: video.getBoundingClientRect().left,
+            R: video.getBoundingClientRect().right,
+            T: video.getBoundingClientRect().top,
+            B: video.getBoundingClientRect().bottom
+        };
+        var mouse = {X: e.pageX, Y: e.pageY};
+
+        if(mouse.X > boundary.L && mouse.X < boundary.R && mouse.Y > boundary.T && mouse.Y < boundary.B){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    function startIdler(){
+        return setInterval(function(){
+            if(isControls()){
+                if(values.idler == 1){
+                    showControls(0);
+                }else{
+                    values.idler++;
+                }
+            }
+        }, 1500);
     }
 
     /*** Controls UI ***/
