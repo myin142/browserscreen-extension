@@ -24,6 +24,8 @@ function MediaControls(video, prefix){
         currProgress: prefix + "curr-progress-bar",
         currBuffer: prefix + "curr-buffered-bar",
         previewTime: prefix + "progress-bar-time",
+
+        loading: prefix + "loading-icon"
     }
 
     // Values for Elements
@@ -35,6 +37,9 @@ function MediaControls(video, prefix){
         sliderBarHeight: 3,
         progressHeight: 3,
         progressContainer: 16,
+
+        loadingSize: 80,
+        loadingBorder: 5,
 
         playbackRates: [
             0.25,
@@ -99,8 +104,7 @@ function MediaControls(video, prefix){
 
     // Remove Controls and Listeners from original video source
     this.removeControls = function(){
-        var controls = document.querySelector("#" + identifiers.container);
-        if(controls != null) controls.parentNode.removeChild(controls);
+        if(container != null) container.parentNode.removeChild(container);
 
         var style = document.querySelector("#" + identifiers.style);
         if(style != null) style.parentNode.removeChild(style);
@@ -110,6 +114,7 @@ function MediaControls(video, prefix){
 
     /* END OF PUBLIC FUNCTION */
 
+    displayLoading();
     return container;
 
     //TODO Progress Bar
@@ -127,6 +132,8 @@ function MediaControls(video, prefix){
         video.addEventListener("webkitfullscreenchange", videoFullscreenListener);
         video.addEventListener("ratechange", videoRateListener);
         video.addEventListener("progress", videoProgressListener);
+        video.addEventListener("waiting", videoWaitListener);
+        video.addEventListener("playing", videoPlayingListener);
     }
     /*function videoClickListener(){
         if(video.paused){
@@ -174,6 +181,14 @@ function MediaControls(video, prefix){
     }
     function videoProgressListener(){
         updateCurrentBuffer();
+    }
+    function videoWaitListener(){
+        displayLoading();
+    }
+    function videoPlayingListener(){
+        console.log("Can be played");
+        var loading = container.querySelector("." + identifiers.loading);
+        loading.style.display = "none";
     }
 
     function createStyle(){
@@ -326,6 +341,48 @@ function MediaControls(video, prefix){
                 top: -20px;
                 display: none;
             }
+            .`+identifiers.loading+`{
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: `+values.loadingSize+`px;
+                height: `+values.loadingSize+`px;
+                border-radius: 50%;
+            }
+            .`+identifiers.loading+` .circular{
+              animation: rotate 2s linear infinite;
+              height: 100%;
+              transform-origin: center center;
+              width: 100%;
+              margin: auto;
+            }
+            .`+identifiers.loading+` .path{
+              stroke-dasharray: 1, 200;
+              stroke-dashoffset: 0;
+              animation: dash 1.5s ease-in-out infinite;
+              stroke-linecap: round;
+              stroke: rgba(150,150,150,.5);
+            }
+            @keyframes rotate {
+              100% {
+                transform: rotate(360deg);
+              }
+            }
+            @keyframes dash {
+              0% {
+                stroke-dasharray: 1, 200;
+                stroke-dashoffset: 0;
+              }
+              50% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -35px;
+              }
+              100% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -124px;
+              }
+            }
         `;
 
         var style = document.createElement("STYLE");
@@ -344,6 +401,20 @@ function MediaControls(video, prefix){
         video.removeEventListener("webkitfullscreenchange", videoFullscreenListener);
         video.removeEventListener("ratechange", videoRateListener);
         video.removeEventListener("progress", videoProgressListener);
+        video.removeEventListener("waiting", videoWaitListener);
+    }
+    function displayLoading(){
+        console.log("Loading");
+        var loading = container.querySelector("." + identifiers.loading);
+        if(loading == null){
+            loading = document.createElement("DIV");
+            loading.classList.add(identifiers.loading);
+            loading.innerHTML = "<svg class='circular' viewBox='25 25 50 50'><circle class='path' stroke='#000' cx='50' cy='50' r='20' fill='none' stroke-width='2' stroke-miterlimit='10'/></svg>";
+            loading.style.display = "none";
+            container.appendChild(loading);
+        }else if(loading.style.display == "none"){
+            loading.style.display = "block";
+        }
     }
 
     /*** Controls UI ***/
