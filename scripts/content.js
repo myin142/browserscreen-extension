@@ -1,4 +1,4 @@
-var debugging = true;
+var debugging = false;
 
 var videoClass = "browserscreen_VideoIDClass";
 var fullscreenClass = "browserscreen_FullscreenVideoClass";
@@ -101,7 +101,6 @@ chrome.runtime.onMessage.addListener(function(msg){
 
 function createControls(video){
     mControls = MediaControls(video, "browserscreen");
-    document.body.appendChild(mControls);
 }
 
 function removeControls(){

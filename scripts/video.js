@@ -3,7 +3,6 @@ function MediaControls(video, prefix){
     prefix = ((prefix == undefined) ? "" : prefix + "-");
     var identifiers = {
         style: prefix + "videoControlsStyle",
-        container: prefix + "videoControls",
         buttons: prefix + "controls-btn",
         slider: prefix + "volume-slider",
         sliderHandle: prefix + "volume-slider-handle",
@@ -15,8 +14,16 @@ function MediaControls(video, prefix){
         qualityLabel: prefix + "quality-label",
         playSpeed: prefix + "playback-speed",
 
+        container: prefix + "videoControls",
+        subContainer: prefix + "sub-container",
         leftContainer: prefix + "controls-leftContainer",
         rightContainer: prefix + "controls-rightContainer",
+
+        progressBar: prefix + "progress-bar",
+        progressContainer: prefix + "progress-bar-container",
+        currProgress: prefix + "curr-progress-bar",
+        currBuffer: prefix + "curr-buffered-bar",
+        previewTime: prefix + "progress-bar-time",
     }
 
     // Values for Elements
@@ -26,6 +33,8 @@ function MediaControls(video, prefix){
         sliderWidth: 52,
         sliderHandleSize: 12,
         sliderBarHeight: 3,
+        progressHeight: 3,
+        progressContainer: 16,
 
         playbackRates: [
             0.25,
@@ -40,6 +49,15 @@ function MediaControls(video, prefix){
     // Create Container
     var container = document.createElement("DIV");
     container.id = identifiers.container;
+
+    // Create Sub Container
+    var subContainer = document.createElement("DIV");
+    subContainer.classList.add(identifiers.subContainer);
+
+    // Append Elements to document
+    container.appendChild(subContainer);
+    document.body.appendChild(container);
+    document.head.appendChild(createStyle());
 
     // Create UI Elements of Left Container
     var leftContainer = document.createElement("DIV");
@@ -63,9 +81,19 @@ function MediaControls(video, prefix){
     rightContainer.appendChild(fullscreenBtn);
     rightContainer.classList.add(identifiers.rightContainer);
 
+    // Create Progress Bar and Add elements to sub container
+    var progressBar = createProgressBar();
+    subContainer.appendChild(progressBar);
+    subContainer.appendChild(leftContainer);
+    subContainer.appendChild(rightContainer);
+
+    // Update UI for first display
+    updateVolumeButton();
+    updateCurrentProgress();
+    updateCurrentBuffer();
+
     // Add Listeners to Video and add Style
     addVideoListeners();
-    document.head.appendChild(createStyle());
 
     /* PUBLIC FUNCTION*/
 
@@ -82,10 +110,10 @@ function MediaControls(video, prefix){
 
     /* END OF PUBLIC FUNCTION */
 
-    // Append Elements to Container
-    container.appendChild(leftContainer);
-    container.appendChild(rightContainer);
     return container;
+
+    //TODO Progress Bar
+    //TODO Loading Icon on waiting
 
     // Video Listeners
     function addVideoListeners(){
@@ -98,6 +126,7 @@ function MediaControls(video, prefix){
         video.addEventListener("loadedmetadata", videoMetadataListener);
         video.addEventListener("webkitfullscreenchange", videoFullscreenListener);
         video.addEventListener("ratechange", videoRateListener);
+        video.addEventListener("progress", videoProgressListener);
     }
     /*function videoClickListener(){
         if(video.paused){
@@ -110,18 +139,7 @@ function MediaControls(video, prefix){
         changeReplay(playBtn);
     }
     function videoVolumeListener(){
-        var volume = video.volume;
-
-        if(volume == 0 || video.muted){
-            changeMute(volBtn);
-            setVolumeSlider(volSlide, 0);
-        }else if(volume < 0.5){
-            changeUnmuteLow(volBtn);
-            setVolumeSlider(volSlide, getVolumeOffset());
-        }else{
-            changeUnmute(volBtn);
-            setVolumeSlider(volSlide, getVolumeOffset());
-        }
+        updateVolumeButton();
     }
     function videoPlayListener(){
         changePause(playBtn);
@@ -130,10 +148,15 @@ function MediaControls(video, prefix){
         changePlay(playBtn);
     }
     function videoTimeListener(){
+        if(video.seeking || video.paused) return;
+
         var currTimeLabel = timeLabel.querySelector("." + identifiers.timeCurr);
         var time = getCurrentTime();
-        if(currTimeLabel.innerHTML != time)
+        if(currTimeLabel.innerHTML != time){
             currTimeLabel.innerHTML = time;
+        }
+
+        updateCurrentProgress();
     }
     function videoMetadataListener(){
         var tTotal = timeLabel.querySelector("." + identifiers.timeTotal);
@@ -149,6 +172,9 @@ function MediaControls(video, prefix){
         var rateText = playSpeedBtn.querySelector("SPAN");
         rateText.innerHTML = video.playbackRate + "x";
     }
+    function videoProgressListener(){
+        updateCurrentBuffer();
+    }
 
     function createStyle(){
         var css = `
@@ -156,22 +182,27 @@ function MediaControls(video, prefix){
                 display: none !important;
             }
             #`+identifiers.container+`{
-                display: inline-flex;
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 right: 0;
+                padding: 0 0.7em;
                 z-Index: 2147483647;
                 font-family: Roboto, Arial, sans-serif;
-                text-shadow: 0 0 2px rgba(0,0,0,.5);
-                height: `+values.controlsHeight+`px;
-                line-height: `+values.controlsHeight+`px;
-                background: rgba(0,0,0,0.6);
-                justify-content: space-between;
-                color: #CCC;
                 font-size: 12px;
                 text-align: center;
                 -webkit-user-select: none;
+                line-height: `+values.controlsHeight+`px;
+                height: `+values.controlsHeight+`px;
+            }
+            .`+identifiers.subContainer+`{
+                height: 100%;
+                display: inline-flex;
+                justify-content: space-between;
+                position: relative;
+                width: 100%;
+                color: #CCC;
+                background: rgba(0,0,0,0.6);
             }
             .`+identifiers.leftContainer+`, .`+identifiers.rightContainer+`{
                 display: inline-flex;
@@ -223,10 +254,7 @@ function MediaControls(video, prefix){
                 margin-top: -2px;
                 width: `+values.sliderWidth+`px;
             }
-            .`+identifiers.timeDisplay+`{
-                padding: 0 0.7em;
-            }
-            .`+identifiers.qualityLabel+`{
+            .`+identifiers.timeDisplay+`, .`+identifiers.qualityLabel+`{
                 padding: 0 0.7em;
             }
             .`+identifiers.playSpeed+` ul{
@@ -247,6 +275,57 @@ function MediaControls(video, prefix){
             .`+identifiers.playSpeed+` span:hover{
                 color: white;
             }
+            .`+identifiers.progressContainer+`{
+                position: absolute;
+                width: 100%;
+                top: -`+values.progressContainer+`px;
+                height: `+values.progressContainer+`px;
+                cursor: pointer;
+            }
+            .`+identifiers.progressContainer+`:hover .`+identifiers.progressBar+`{
+                bottom: -`+(values.progressContainer - (values.progressHeight * 2))+`px;
+            }
+            .`+identifiers.progressContainer+`:hover .`+identifiers.progressBar+` *:not(.`+identifiers.previewTime+`), .`+identifiers.progressContainer+`:hover .`+identifiers.progressBar+`::before{
+                height: `+(values.progressHeight * 2)+`px;
+            }
+            .`+identifiers.progressContainer+`:hover .`+identifiers.previewTime+`{
+                display: block;
+            }
+            .`+identifiers.progressBar+`{
+                position: relative;
+                height: `+values.progressHeight+`px;
+                bottom: -`+(values.progressContainer - values.progressHeight)+`px;
+            }
+            .`+identifiers.currProgress+`, .`+identifiers.currBuffer+`, .`+identifiers.progressBar+`::before{
+                height: 100%;
+                position: absolute;
+                width: 100%;
+                left: 0;
+                top: 0;
+                -webkit-transition: transform .5s;
+                transform-origin: 0% 50%;
+                transform: scaleX(0);
+            }
+            .`+identifiers.currProgress+`{
+                background: red;
+            }
+            .`+identifiers.currBuffer+`{
+                background: rgba(150,150,150,0.8);
+            }
+            .`+identifiers.progressBar+`::before{
+                content: '';
+                background: rgba(90,90,90,0.5);
+                transform: scaleX(1);
+            }
+            .`+identifiers.previewTime+`{
+                position: absolute;
+                background: rgba(80,80,80,0.7);
+                height: 12px;
+                padding: 0.4em;
+                line-height: 12px;
+                top: -20px;
+                display: none;
+            }
         `;
 
         var style = document.createElement("STYLE");
@@ -264,6 +343,7 @@ function MediaControls(video, prefix){
         video.removeEventListener("loadedmetadata", videoMetadataListener);
         video.removeEventListener("webkitfullscreenchange", videoFullscreenListener);
         video.removeEventListener("ratechange", videoRateListener);
+        video.removeEventListener("progress", videoProgressListener);
     }
 
     /*** Controls UI ***/
@@ -272,6 +352,136 @@ function MediaControls(video, prefix){
         btn.classList.add(identifiers.buttons);
         btn.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#CCC"/></svg>';
         return btn;
+    }
+
+    // Progress Bar
+    function createProgressBar(){
+        var container = document.createElement("DIV");
+        container.classList.add(identifiers.progressContainer);
+
+        var bar = document.createElement("DIV");
+        bar.classList.add(identifiers.progressBar);
+
+        var timeLabel = document.createElement("DIV");
+        timeLabel.classList.add(identifiers.previewTime);
+
+        var currProgress = document.createElement("DIV");
+        currProgress.classList.add(identifiers.currProgress);
+
+        var currBuffered= document.createElement("DIV");
+        currBuffered.classList.add(identifiers.currBuffer);
+
+        var draggingTimeBar = false;
+        var wasPlaying = false;
+        container.addEventListener("mousemove", function(e){
+            var offset = relativeMouseX(e, bar);
+            showTimestamp(offset);
+        });
+        container.addEventListener("mousedown", function(e){
+            if(!video.paused){
+                video.pause();
+                wasPlaying = true;
+            }
+            draggingTimeBar = true;
+            currProgress.style.transition = "transform 0s";
+            timeLabel.style.display = "block";
+            moveHandle(e);
+        });
+        document.addEventListener("mousemove", function(e){
+            if(draggingTimeBar) moveHandle(e);
+        });
+        document.addEventListener("mouseup", function(e){
+            if(draggingTimeBar){
+                draggingTimeBar = false;
+                timeLabel.style.display = "";
+                currProgress.style.transition = "";
+                seekVideo(e);
+
+                if(wasPlaying){
+                    video.play();
+                    wasPlaying = false;
+                }
+            }
+        });
+
+        bar.appendChild(currBuffered);
+        bar.appendChild(currProgress);
+        container.appendChild(bar);
+        container.appendChild(timeLabel);
+        return container;
+
+        function moveHandle(e){
+            var offset = relativeMouseX(e, bar);
+            showTimestamp(offset);
+
+            var percentage = getPercentage(offset);
+            currProgress.style.transform = "scaleX("+percentage+")";
+        }
+        function seekVideo(e){
+            var scale = currProgress.style.transform;
+            var percentage = scale.substring(scale.indexOf("(")+1, scale.indexOf(")"));
+            video.currentTime = percentage * video.duration;
+        }
+    }
+    function showTimestamp(offset){
+        var percentage = getPercentage(offset);
+        var time = video.duration * percentage;
+
+        var label = progressBar.querySelector("." + identifiers.previewTime);
+        label.innerHTML = normalizeTime(time);
+        label.style.left = (offset-label.offsetWidth/2) + "px";
+    }
+    function getPercentage(offset){
+        var bar = progressBar.querySelector("." + identifiers.progressBar);
+        var max = bar.getBoundingClientRect().right - bar.getBoundingClientRect().left;
+        var percentage = offset / max;
+        return percentage;
+    }
+    function relativeMouseX(e, bar){
+        var progressBarL = bar.getBoundingClientRect().left;
+        var progressBarR = bar.getBoundingClientRect().right;
+        var mouseX = e.pageX;
+
+        var max = progressBarR - progressBarL;
+        var relX = mouseX - progressBarL;
+        if(relX >= max){
+            relX = max;
+        }else if(relX <= 0){
+            relX = 0;
+        }
+
+        return relX;
+    }
+    function getScaleByTime(time){
+        var percentage = time / video.duration;
+        return percentage;
+    }
+    function getBufferRangeIndex(){
+        var buffers = video.buffered;
+        var index = 0;
+        for(var i = 0; i < buffers.length; i++){
+            var bufferEnd = buffers.end(i);
+            var lastBuffer = buffers.end(index);
+            if(bufferEnd > video.currentTime){
+                if(lastBuffer <= video.currentTime || (lastBuffer > video.currentTime && bufferEnd < lastBuffer)){
+                    index = i;
+                }
+            }
+        }
+        return index;
+    }
+    function updateCurrentBuffer(){
+        if(video.buffered.length > 0){
+            var bufferId = getBufferRangeIndex();
+            var currBuff = video.buffered.end(bufferId);
+            var currBuffered = progressBar.querySelector("." + identifiers.currBuffer);
+            currBuffered.style.transform = "scaleX("+getScaleByTime(currBuff)+")";
+        }
+    }
+    function updateCurrentProgress(){
+        var currTime = video.currentTime;
+        var currProgress = progressBar.querySelector("." + identifiers.currProgress);
+        currProgress.style.transform = "scaleX("+getScaleByTime(currTime)+")";
     }
 
     // Playback Speed Button
@@ -410,7 +620,9 @@ function MediaControls(video, prefix){
             if(dragging) changeVolume(e);
         });
         document.addEventListener("mouseup", function(e){
-            dragging = false;
+            if(dragging){
+                dragging = false;
+            }
         });
 
         slider.appendChild(sliderHandle);
@@ -480,6 +692,20 @@ function MediaControls(video, prefix){
         var unmuteLow = "M8,21 L12,21 L17,26 L17,10 L12,15 L8,15 L8,21 Z M19,14 L19,22 C20.48,21.32 21.5,19.77 21.5,18 C21.5,16.26 20.48,14.74 19,14 Z";
         btn.setAttribute("aria-label", "unmuted low");
         btn.querySelector("path").setAttribute("d", unmuteLow);
+    }
+    function updateVolumeButton(){
+        var volume = video.volume;
+
+        if(volume == 0 || video.muted){
+            changeMute(volBtn);
+            setVolumeSlider(volSlide, 0);
+        }else if(volume < 0.5){
+            changeUnmuteLow(volBtn);
+            setVolumeSlider(volSlide, getVolumeOffset());
+        }else{
+            changeUnmute(volBtn);
+            setVolumeSlider(volSlide, getVolumeOffset());
+        }
     }
 
     // Play/Pause Button
