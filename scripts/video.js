@@ -871,7 +871,7 @@ function MediaControls(video, prefix){
     }
     function setVolumeSlider(slider, offset){
         // Change Volume Slider offset
-        slider.setAttribute("aria-label", ((offset == 0) ? 0 : (video.volume * 100)) + "% Volume");
+        slider.setAttribute("aria-label", ((offset == 0) ? 0 : (video.volume * 100).toFixed(0)) + "% Volume");
 
         var slideHandle = volSlide.querySelector("." + identifiers.sliderHandle);
         slideHandle.style.left = offset + "px";
@@ -931,7 +931,7 @@ function MediaControls(video, prefix){
     function createBackButton(){
         var btn = createSvgButton();
         var backBtn = "M 18.204 20.541 L 18.204 26.317 L 12.602 22.158 L 7 18 L 12.602 13.842 L 18.204 9.683 L 18.204 15.459 L 20.383 13.842 L 25.985 9.683 L 25.985 18 L 25.985 26.317 L 20.383 22.158 L 18.204 20.541 Z";
-        btn.setAttribute("aria-label", "Rewind");
+        btn.setAttribute("aria-label", "rewind");
         btn.querySelector("path").setAttribute("d", backBtn);
 
         btn.addEventListener("click", function(){
@@ -944,7 +944,7 @@ function MediaControls(video, prefix){
     function createForwardButton(){
         var btn = createSvgButton();
         var fwdBtn = "M 17.781 20.541 L 17.781 26.317 L 23.383 22.158 L 28.985 18 L 23.383 13.842 L 17.781 9.683 L 17.781 15.459 L 15.602 13.842 L 10 9.683 L 10 18 L 10 26.317 L 15.602 22.158 L 17.781 20.541 Z";
-        btn.setAttribute("aria-label", "Fast-Forward");
+        btn.setAttribute("aria-label", "fast-forward");
         btn.querySelector("path").setAttribute("d", fwdBtn);
 
         btn.addEventListener("click", function(){
