@@ -14,6 +14,7 @@ chrome.runtime.onMessage.addListener(function(msg){
 	if(msg.start && window == window.top){
 		if(debugging) console.log("Checking Resize/Restore");
 
+		// Detect active BrowerScreen by Main Style
 		var style = document.querySelector("#" + styleID);
 		if(style == null){
 			chrome.runtime.sendMessage({resize: true});
@@ -43,7 +44,7 @@ chrome.runtime.onMessage.addListener(function(msg){
 			vid.classList.add(videoClass);
 			resizeElements(vid);
 
-			// Create Video Controls
+			// Create Video Controls for HTML5 Videos
 			if(vid.tagName == "VIDEO"){
 				if(debugging) console.log("Creating Controls");
 				createControls(vid);
@@ -55,6 +56,7 @@ chrome.runtime.onMessage.addListener(function(msg){
 	else if(msg.restore){
 		if(debugging) console.log("Restore Video");
 
+		// Restore Elements and Remove Controls
 		var vid = document.querySelector("." + videoClass);
 		restoreElements();
 		removeControls();
@@ -148,6 +150,8 @@ function restoreElements(){
 
 // Add Fullscreen Classes to all Parents of Video and message top frames
 function resizeElements(elem){
+
+	// Resize all Parents
 	while(elem != null && elem.classList != undefined){
 		elem.classList.add(fullscreenClass);
 		elem = elem.parentNode;
@@ -167,12 +171,12 @@ function getFormattedSource(src){
 	return src.replace(/^https?\:\/\//i, "").replace(/^http?\:\/\//i, "");
 }
 
-// Find Videos in Website: FLASH, HTML5, EMBEDED
+// Find Videos in Website: FLASH, HTML5, EMBEDED. Flash before HTML5 for Crunchyroll
 function findVideos(){
-	// Search HTML5 Videos
+	// Search Flash Videos
 	var	vid = document.querySelector("object[type='application/x-shockwave-flash']");
 
-	// Search Flash Videos
+	// Search HTML5 Videos
 	if(vid == null){
 		vid = document.querySelector("video");
 

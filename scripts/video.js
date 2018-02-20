@@ -102,23 +102,27 @@ function MediaControls(video, prefix){
     // Add Listeners to Video and add Style
     addVideoListeners();
 
-    /* PUBLIC FUNCTION*/
+    /* PUBLIC FUNCTIONS */
 
     // Remove Controls and Listeners from original video source
     this.removeControls = function(){
+        // Remove Controls Container
         if(container != null) container.parentNode.removeChild(container);
 
+        // Remove Controls Style
         var style = document.querySelector("#" + identifiers.style);
         if(style != null) style.parentNode.removeChild(style);
 
+        // Remove all custom Listeners from Video
         removeListeners();
         video.style.cursor = "";
     };
 
-    /* END OF PUBLIC FUNCTION */
-
+    // Start Idler
     var idleInterval = startIdler();
     return container;
+
+    /* PRIVATE FUNCTIONS */
 
     // Video Listeners
     function addVideoListeners(){
@@ -145,25 +149,31 @@ function MediaControls(video, prefix){
         updateVolumeButton();
     }
     function videoPlayListener(){
+        // Play Video and Start Idler
         changePause(playBtn);
         idleInterval = startIdler();
     }
     function videoPauseListener(){
+        // Paused Video and show Controls, Stopping Idler
         changePlay(playBtn);
         showControls(1);
     }
     function videoTimeListener(){
+        // No Update on seeking and paused videos
         if(video.seeking || video.paused) return;
 
+        // Update Time Display
         var currTimeLabel = timeLabel.querySelector("." + identifiers.timeCurr);
         var time = getCurrentTime();
         if(currTimeLabel.innerHTML != time){
             currTimeLabel.innerHTML = time;
         }
 
+        // Update Progress Bar for current Time
         updateCurrentProgress();
     }
     function videoMetadataListener(){
+        // When Metadata is now available, update TotalTime and Quality Label
         var tTotal = timeLabel.querySelector("." + identifiers.timeTotal);
         tTotal.innerHTML = getTotalTime();
 
@@ -171,9 +181,15 @@ function MediaControls(video, prefix){
         qualityLabel.appendChild(getQuality());
     }
     function videoFullscreenListener(){
-        (document.webkitFullscreenElement == video) ? changeExitFull(fullscreenBtn) : changeFullscreen(fullscreenBtn);
+        // Toggle Fullscreen
+        if(document.webkitFullscreenElement == video){
+            changeExitFull(fullscreenBtn);
+        }else{
+            changeFullscreen(fullscreenBtn);
+        }
     }
     function videoRateListener(){
+        // Update Playback Rate Label
         var rateText = playSpeedBtn.querySelector("SPAN");
         rateText.innerHTML = video.playbackRate + "x";
     }
@@ -184,21 +200,25 @@ function MediaControls(video, prefix){
         displayLoading();
     }
     function videoPlayingListener(){
+        // Hide Loading Icon when playable
         var loading = container.querySelector("." + identifiers.loading);
         if(loading != null)
             loading.style.display = "none";
     }
     function videoMouseLeaveListener(e){
+        // Hide Controls when Mouse leaves video area
         if(!video.paused && !insideBoundary(e)){
             showControls(0);
         }
     }
     function videoMouseEnterListener(){
+        // Show Controls when Mouse Enters Video
         if(!video.paused){
             showControls(1);
         }
     }
     function videoMouseMoveListener(){
+        // Reset Idler if mouse moving or show Controls if it is hidden
         if(!video.paused){
             if(isControls()){
                 values.idler = 0;
@@ -404,6 +424,7 @@ function MediaControls(video, prefix){
             }
         `;
 
+        // Create Style and return
         var style = document.createElement("STYLE");
         style.id = identifiers.style;
         style.innerHTML = css;
@@ -426,6 +447,7 @@ function MediaControls(video, prefix){
         video.removeEventListener("mousemove", videoMouseMoveListener);
     }
     function displayLoading(){
+        // Create Loading Icon if not available and display
         var loading = container.querySelector("." + identifiers.loading);
         if(loading == null){
             loading = document.createElement("DIV");
@@ -438,13 +460,16 @@ function MediaControls(video, prefix){
         }
     }
     function showControls(status){
+        // Toggle Video Controls
         video.style.cursor = (status) ? "" : "none";
         container.style.height = (status) ? "" : "0px";
 
+        // Start Idler if controls are shown and video is playing
         if(status && !video.paused && idleInterval == null){
             idleInterval = startIdler();
         }
 
+        // Clear Idler if controls are hidden or video is paused
         if(!status || video.paused){
             clearInterval(idleInterval);
             values.idler = 0;
@@ -452,9 +477,11 @@ function MediaControls(video, prefix){
         }
     }
     function isControls(){
+        // Check if Controls are hidden or not
         return (container.style.height == "0px") ? false : true;
     }
     function insideBoundary(e){
+        // Check if mouse is inside video boundaries
         var boundary = {
             L: video.getBoundingClientRect().left,
             R: video.getBoundingClientRect().right,
@@ -470,6 +497,7 @@ function MediaControls(video, prefix){
         }
     }
     function startIdler(){
+        // Start Idler that hides controls after couple seconds
         return setInterval(function(){
             if(isControls()){
                 if(values.idler == 1){
@@ -483,6 +511,7 @@ function MediaControls(video, prefix){
 
     /*** Controls UI ***/
     function createSvgButton(){
+        // Create Button with SVG Container
         var btn = document.createElement("BUTTON");
         btn.classList.add(identifiers.buttons);
         btn.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#CCC"/></svg>';
@@ -494,24 +523,32 @@ function MediaControls(video, prefix){
         var container = document.createElement("DIV");
         container.classList.add(identifiers.progressContainer);
 
+        // Create Progress Bar Container
         var bar = document.createElement("DIV");
         bar.classList.add(identifiers.progressBar);
 
+        // Create Time Label that displays on hover
         var timeLabel = document.createElement("DIV");
         timeLabel.classList.add(identifiers.previewTime);
 
+        // Element for showing current Progress
         var currProgress = document.createElement("DIV");
         currProgress.classList.add(identifiers.currProgress);
 
+        // Element for showing closest buffered range
         var currBuffered= document.createElement("DIV");
         currBuffered.classList.add(identifiers.currBuffer);
 
         var draggingTimeBar = false;
         var wasPlaying = false;
+
+        // Show TimeStamp on hover at whole progress bar container
         container.addEventListener("mousemove", function(e){
             var offset = relativeMouseX(e, bar);
             showTimestamp(offset);
         });
+
+        // Make current Progress Bar to follow mouse until mouse up
         container.addEventListener("mousedown", function(e){
             if(!video.paused){
                 video.pause();
@@ -525,6 +562,8 @@ function MediaControls(video, prefix){
         document.addEventListener("mousemove", function(e){
             if(draggingTimeBar) moveHandle(e);
         });
+
+        // Seeking to selected Time
         document.addEventListener("mouseup", function(e){
             if(draggingTimeBar){
                 draggingTimeBar = false;
@@ -545,6 +584,7 @@ function MediaControls(video, prefix){
         container.appendChild(timeLabel);
         return container;
 
+        // Move current Progress Bar
         function moveHandle(e){
             var offset = relativeMouseX(e, bar);
             showTimestamp(offset);
@@ -552,6 +592,7 @@ function MediaControls(video, prefix){
             var percentage = getPercentage(offset);
             currProgress.style.transform = "scaleX("+percentage+")";
         }
+        // Seek to specified Time
         function seekVideo(e){
             var scale = currProgress.style.transform;
             var percentage = scale.substring(scale.indexOf("(")+1, scale.indexOf(")"));
@@ -559,6 +600,7 @@ function MediaControls(video, prefix){
         }
     }
     function showTimestamp(offset){
+        // Show current Time on Label
         var percentage = getPercentage(offset);
         var time = video.duration * percentage;
 
@@ -567,12 +609,14 @@ function MediaControls(video, prefix){
         label.style.left = (offset-label.offsetWidth/2) + "px";
     }
     function getPercentage(offset){
+        // Get Percentage of offset from whole progress bar
         var bar = progressBar.querySelector("." + identifiers.progressBar);
         var max = bar.getBoundingClientRect().right - bar.getBoundingClientRect().left;
         var percentage = offset / max;
         return percentage;
     }
     function relativeMouseX(e, bar){
+        // Get relative mouse X coordinates to progress bar
         var progressBarL = bar.getBoundingClientRect().left;
         var progressBarR = bar.getBoundingClientRect().right;
         var mouseX = e.pageX;
@@ -588,10 +632,12 @@ function MediaControls(video, prefix){
         return relX;
     }
     function getScaleByTime(time){
+        // Get Percentage of current Time to Video Duration for scaling Progress Bars
         var percentage = time / video.duration;
         return percentage;
     }
     function getBufferRangeIndex(){
+        // Get Index of closest Buffer Range to current Time
         var buffers = video.buffered;
         var index = 0;
         for(var i = 0; i < buffers.length; i++){
@@ -606,6 +652,7 @@ function MediaControls(video, prefix){
         return index;
     }
     function updateCurrentBuffer(){
+        // Update Buffer to show closest buffer time
         if(video.buffered.length > 0){
             var bufferId = getBufferRangeIndex();
             var currBuff = video.buffered.end(bufferId);
@@ -614,6 +661,7 @@ function MediaControls(video, prefix){
         }
     }
     function updateCurrentProgress(){
+        // Scale current Progress Bar
         var currTime = video.currentTime;
         var currProgress = progressBar.querySelector("." + identifiers.currProgress);
         currProgress.style.transform = "scaleX("+getScaleByTime(currTime)+")";
@@ -636,10 +684,12 @@ function MediaControls(video, prefix){
         }
         container.appendChild(playbackOptions);
 
+        // Show Playback Options on click
         currRate.addEventListener("click", function(){
             toggleDisplay(playbackOptions);
         });
 
+        // Change Playback Rate and hide Options
         playbackOptions.addEventListener("click", function(e){
             var target = e.srcElement;
             video.playbackRate = target.innerHTML;
@@ -662,6 +712,7 @@ function MediaControls(video, prefix){
         return container;
     }
     function getQuality(){
+        // Get height of video and display as Quality
         var text = document.createElement("SPAN");
         text.innerHTML = video.videoHeight + "p";
         return text;
@@ -682,11 +733,13 @@ function MediaControls(video, prefix){
         return btn;
     }
     function changeFullscreen(btn){
+        // Change Button to Fullscreen Button
         var fullscreen = "M 10 16 L 12 16 L 12 12 L 16 12 L 16 10 L 10 10 L 10 16 L 10 16 Z  M 12 20 L 10 20 L 10 26 L 16 26 L 16 24 L 12 24 L 12 20 L 12 20 Z  M 26 16 L 24 16 L 24 12 L 20 12 L 20 10 L 26 10 L 26 16 L 26 16 Z  M 24 20 L 26 20 L 26 26 L 20 26 L 20 24 L 24 24 L 24 20 L 24 20 Z";
         btn.setAttribute("aria-label", "Fullscreen");
         btn.querySelector("path").setAttribute("d", fullscreen);
     }
     function changeExitFull(btn){
+        // Change Button to Exit Fullscreen Button
         var exitFull = "M 14 14 L 10 14 L 10 16 L 16 16 L 16 10 L 14 10 L 14 14 L 14 14 Z  M 22 14 L 22 10 L 20 10 L 20 16 L 26 16 L 26 14 L 22 14 L 22 14 Z  M 20 26 L 22 26 L 22 22 L 26 22 L 26 20 L 20 20 L 20 26 L 20 26 Z  M 10 22 L 14 22 L 14 26 L 16 26 L 16 20 L 10 20 L 10 22 L 10 22 Z";
         btn.setAttribute("aria-label", "Exit Fullscreen");
         btn.querySelector("path").setAttribute("d", exitFull);
@@ -697,10 +750,12 @@ function MediaControls(video, prefix){
         var timeDisplay = document.createElement("DIV");
         timeDisplay.classList.add(identifiers.timeDisplay);
 
+        // Element for showing current Time of Video
         var currTime = document.createElement("SPAN");
         currTime.innerHTML = getCurrentTime();
         currTime.classList.add(identifiers.timeCurr);
 
+        // Element for showing duration of video
         var totalTime = document.createElement("SPAN");
         totalTime.innerHTML = getTotalTime();
         totalTime.classList.add(identifiers.timeTotal);
@@ -721,11 +776,13 @@ function MediaControls(video, prefix){
         return normalizeTime(time);
     }
     function getSeparator(){
+        // Create Separator between Current Time and Total Time
         var sep = document.createElement("SPAN");
         sep.innerHTML = " / ";
         return sep;
     }
     function normalizeTime(time){
+        // Convert Time to Minutes and Seconds
         var minutes = Math.floor(time / 60);
         var seconds = Math.floor(time - minutes * 60);
         var x = (minutes < 10) ? "0" + minutes : minutes;
@@ -740,12 +797,14 @@ function MediaControls(video, prefix){
         slider.classList.add(identifiers.slider);
         slider.setAttribute("aria-label", (video.volume * 100) + "% Volume");
 
+        // Creat Slider Handle for showing current Volume State
         var sliderHandle = document.createElement("DIV");
         sliderHandle.classList.add(identifiers.sliderHandle);
 
         var offset = getVolumeOffset();
         sliderHandle.style.left = offset + "px";
 
+        // Creating Dragging for Slider to change Volume
         var dragging = false;
         slider.addEventListener("mousedown", function(e){
             dragging = true;
@@ -763,6 +822,7 @@ function MediaControls(video, prefix){
         slider.appendChild(sliderHandle);
         return slider;
 
+        // Change Volume according to mouse position inside the slider
         function changeVolume(e){
             var handleSize = values.sliderHandleSize;
             var sliderL = slider.getBoundingClientRect().left + handleSize/2;
@@ -781,6 +841,7 @@ function MediaControls(video, prefix){
         }
     }
     function getVolumeOffset(){
+        // Get Offset for Slider for the current Volume
         var currVol = video.volume;
         var offset = (values.sliderWidth-values.sliderHandleSize) * currVol;
         return offset;
@@ -791,6 +852,7 @@ function MediaControls(video, prefix){
         if(video.muted && video.volume > 0) video.muted = false;
     }
     function setVolumeSlider(slider, offset){
+        // Change Volume Slider offset
         slider.setAttribute("aria-label", ((offset == 0) ? 0 : (video.volume * 100)) + "% Volume");
 
         var slideHandle = volSlide.querySelector("." + identifiers.sliderHandle);
@@ -814,21 +876,25 @@ function MediaControls(video, prefix){
         return btn;
     }
     function changeMute(btn){
+        // Change Button to Muted
         var muteBtn = "M 21.48 17.98 C 21.48 16.21 20.46 14.69 18.98 13.95 L 18.98 16.16 L 21.43 18.61 C 21.46 18.41 21.48 18.2 21.48 17.98 Z  M 23.98 17.98 C 23.98 18.92 23.78 19.8 23.44 20.62 L 24.95 22.13 C 25.61 20.89 25.98 19.48 25.98 17.98 C 25.98 13.7 22.99 10.12 18.98 9.22 L 18.98 11.27 C 21.87 12.13 23.98 14.81 23.98 17.98 Z  M 7.98 10.24 L 12.7 14.97 L 7.98 14.97 L 7.98 20.97 L 11.98 20.97 L 16.98 25.97 L 16.98 19.24 L 21.23 23.49 C 20.56 24.01 19.81 24.42 18.98 24.67 L 18.98 26.73 C 20.36 26.42 21.61 25.78 22.67 24.92 L 24.71 26.97 L 25.98 25.7 L 16.98 16.7 L 9.26 8.98 L 7.98 10.24 Z  M 14.88 12.05 L 16.97 14.14 L 16.97 9.98 L 14.88 12.05 Z";
         btn.setAttribute("aria-label", "muted");
         btn.querySelector("path").setAttribute("d", muteBtn);
     }
     function changeUnmute(btn){
+        // Change Button to Unmuted
         var unmuteBtn = "M8,21 L12,21 L17,26 L17,10 L12,15 L8,15 L8,21 Z M19,14 L19,22 C20.48,21.32 21.5,19.77 21.5,18 C21.5,16.26 20.48,14.74 19,14 ZM19,11.29 C21.89,12.15 24,14.83 24,18 C24,21.17 21.89,23.85 19,24.71 L19,26.77 C23.01,25.86 26,22.28 26,18 C26,13.72 23.01,10.14 19,9.23 L19,11.29 Z";
         btn.setAttribute("aria-label", "unmuted");
         btn.querySelector("path").setAttribute("d", unmuteBtn);
     }
     function changeUnmuteLow(btn){
+        // Change Button to low unmuted volume
         var unmuteLow = "M8,21 L12,21 L17,26 L17,10 L12,15 L8,15 L8,21 Z M19,14 L19,22 C20.48,21.32 21.5,19.77 21.5,18 C21.5,16.26 20.48,14.74 19,14 Z";
         btn.setAttribute("aria-label", "unmuted low");
         btn.querySelector("path").setAttribute("d", unmuteLow);
     }
     function updateVolumeButton(){
+        // Update Volume Button and Slider
         var volume = video.volume;
 
         if(volume == 0 || video.muted){
@@ -854,16 +920,19 @@ function MediaControls(video, prefix){
         return btn;
     }
     function changePlay(btn){
+        // Change to Play Button
         var playBtn = "M 12,26 12,10 25,18 Z";
         btn.setAttribute("aria-label", "play");
         btn.querySelector("path").setAttribute("d", playBtn);
     }
     function changePause(btn){
+        // Change to Pause Button
         var pauseBtn = "M 12,26 16,26 16,10 12,10 z M 21,26 25,26 25,10 21,10 z";
         btn.setAttribute("aria-label", "pause");
         btn.querySelector("path").setAttribute("d", pauseBtn);
     }
     function changeReplay(btn){
+        // Change to Replay Button
         var replayBtn = "M 18,11 V 7 l -5,5 5,5 v -4 c 3.3,0 6,2.7 6,6 0,3.3 -2.7,6 -6,6 -3.3,0 -6,-2.7 -6,-6 h -2 c 0,4.4 3.6,8 8,8 4.4,0 8,-3.6 8,-8 0,-4.4 -3.6,-8 -8,-8 z";
         btn.setAttribute("aria-label", "replay");
         btn.querySelector("path").setAttribute("d", replayBtn);
