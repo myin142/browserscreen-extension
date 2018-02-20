@@ -445,7 +445,7 @@ function MediaControls(video, prefix){
             idleInterval = startIdler();
         }
 
-        if(!status){
+        if(!status || video.paused){
             clearInterval(idleInterval);
             values.idler = 0;
             idleInterval = null;
