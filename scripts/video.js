@@ -42,6 +42,7 @@ function MediaControls(video, prefix){
         loadingBorder: 5,
 
         idler: 0,
+        rewindAmount: 10,
 
         playbackRates: [
             0.25,
@@ -72,7 +73,11 @@ function MediaControls(video, prefix){
     var volBtn = createVolumeButton();
     var volSlide = createVolumeSlider();
     var timeLabel = createTimeLabel();
+    var backBtn = createBackButton();
+    var forwardBtn = createForwardButton();
+    leftContainer.appendChild(backBtn);
     leftContainer.appendChild(playBtn);
+    leftContainer.appendChild(forwardBtn);
     leftContainer.appendChild(volBtn);
     leftContainer.appendChild(volSlide);
     leftContainer.appendChild(timeLabel);
@@ -131,6 +136,7 @@ function MediaControls(video, prefix){
         video.addEventListener("play", videoPlayListener);
         video.addEventListener("pause", videoPauseListener);
         video.addEventListener("timeupdate", videoTimeListener);
+        video.addEventListener("seeked", videoSeekListener);
         video.addEventListener("loadedmetadata", videoMetadataListener);
         video.addEventListener("webkitfullscreenchange", videoFullscreenListener);
         video.addEventListener("ratechange", videoRateListener);
@@ -162,6 +168,17 @@ function MediaControls(video, prefix){
         // No Update on seeking and paused videos
         if(video.seeking || video.paused) return;
 
+        // Update Time Display
+        var currTimeLabel = timeLabel.querySelector("." + identifiers.timeCurr);
+        var time = getCurrentTime();
+        if(currTimeLabel.innerHTML != time){
+            currTimeLabel.innerHTML = time;
+        }
+
+        // Update Progress Bar for current Time
+        updateCurrentProgress();
+    }
+    function videoSeekListener(){
         // Update Time Display
         var currTimeLabel = timeLabel.querySelector("." + identifiers.timeCurr);
         var time = getCurrentTime();
@@ -436,6 +453,7 @@ function MediaControls(video, prefix){
         video.removeEventListener("play", videoPlayListener);
         video.removeEventListener("pause", videoPauseListener);
         video.removeEventListener("timeupdate", videoTimeListener);
+        video.removeEventListener("seeked", videoSeekListener);
         video.removeEventListener("loadedmetadata", videoMetadataListener);
         video.removeEventListener("webkitfullscreenchange", videoFullscreenListener);
         video.removeEventListener("ratechange", videoRateListener);
@@ -907,6 +925,33 @@ function MediaControls(video, prefix){
             changeUnmute(volBtn);
             setVolumeSlider(volSlide, getVolumeOffset());
         }
+    }
+
+    // Create Rewind / Fast-Forward Button
+    function createBackButton(){
+        var btn = createSvgButton();
+        var backBtn = "M 18.204 20.541 L 18.204 26.317 L 12.602 22.158 L 7 18 L 12.602 13.842 L 18.204 9.683 L 18.204 15.459 L 20.383 13.842 L 25.985 9.683 L 25.985 18 L 25.985 26.317 L 20.383 22.158 L 18.204 20.541 Z";
+        btn.setAttribute("aria-label", "Rewind");
+        btn.querySelector("path").setAttribute("d", backBtn);
+
+        btn.addEventListener("click", function(){
+            // No converting necessary if rewindAmount below 60 seconds
+            video.currentTime = video.currentTime - values.rewindAmount;
+        });
+
+        return btn;
+    }
+    function createForwardButton(){
+        var btn = createSvgButton();
+        var fwdBtn = "M 17.781 20.541 L 17.781 26.317 L 23.383 22.158 L 28.985 18 L 23.383 13.842 L 17.781 9.683 L 17.781 15.459 L 15.602 13.842 L 10 9.683 L 10 18 L 10 26.317 L 15.602 22.158 L 17.781 20.541 Z";
+        btn.setAttribute("aria-label", "Fast-Forward");
+        btn.querySelector("path").setAttribute("d", fwdBtn);
+
+        btn.addEventListener("click", function(){
+            video.currentTime = video.currentTime + values.rewindAmount;
+        });
+
+        return btn;
     }
 
     // Play/Pause Button
