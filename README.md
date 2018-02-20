@@ -1,14 +1,8 @@
-# chrome-ext-video
+# BrowserScreen
+Chrome Extension that resizes a video on a website to fit the current browser screen. <br />
+This extension only works with one video on a website! <br />
+Fullscreen is not fully working and will not be worked on in the future. <br />
+Missing features due to no personal needs.
 
-Chrome Extension that resizes the video on the current page to fit browser screen
-
-# Infos
-
-Add new websites to sites.json
-
-Sites.json: <br />
-	Domain - Required, Domain in which you want to use it <br />
-	Container - Required, Elements that have to be resized <br /> 
-	Remove - Optional, remove Elements that will not come back except reload <br />
-	Hide - Optional, hide Elements that will return<br />
-	Custom - Optional, specify custom styles for elements<br />
+# Usage
+Just click the Extension Button on a website with ONE video.
