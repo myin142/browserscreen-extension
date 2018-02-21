@@ -38,8 +38,7 @@ function MediaControls(video, prefix){
         progressHeight: 3,
         progressContainer: 16,
 
-        loadingSize: 80,
-        loadingBorder: 5,
+        loadingSize: 90,
 
         idler: 0,
         rewindAmount: 10,
@@ -418,7 +417,7 @@ function MediaControls(video, prefix){
               stroke-dashoffset: 0;
               animation: dash 1.5s ease-in-out infinite;
               stroke-linecap: round;
-              stroke: rgba(150,150,150,.5);
+              stroke: rgba(180,180,180,1);
             }
             @keyframes rotate {
               100% {
@@ -470,7 +469,7 @@ function MediaControls(video, prefix){
         if(loading == null){
             loading = document.createElement("DIV");
             loading.classList.add(identifiers.loading);
-            loading.innerHTML = "<svg class='circular' viewBox='25 25 50 50'><circle class='path' stroke='#000' cx='50' cy='50' r='20' fill='none' stroke-width='2' stroke-miterlimit='10'/></svg>";
+            loading.innerHTML = "<svg class='circular' viewBox='25 25 50 50'><circle class='path' cx='50' cy='50' r='20' fill='none' stroke-width='3' stroke-miterlimit='10'/></svg>";
             loading.style.display = "none";
             container.appendChild(loading);
         }else if(loading.style.display == "none"){
