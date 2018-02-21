@@ -804,11 +804,15 @@ function MediaControls(video, prefix){
         var hours = Math.floor(time / 3600);
         var minutes = Math.floor((time - hours * 3600) / 60);
         var seconds = Math.floor(time - (minutes * 60) - (hours * 3600));
-        var z = (hours < 10) ? "0" + hours : hours;
-        var x = (minutes < 10) ? "0" + minutes : minutes;
-        var y = (seconds < 10) ? "0" + seconds : seconds;
+        hours = prependTime(hours);
+        minutes = prependTime(minutes);
+        seconds = prependTime(seconds);
+        var dateTime = ((hours != "00") ? hours + ":" : "") + minutes + ":" + seconds;
 
-        return z + ":" + x + ":" + y;
+        return dateTime;
+    }
+    function prependTime(time){
+        return (time < 10) ? "0" + time : time;
     }
 
     // Volume Slider
