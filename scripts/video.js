@@ -482,7 +482,7 @@ function MediaControls(video, prefix){
         container.style.height = (status) ? "" : "0px";
 
         // Start Idler if controls are shown and video is playing
-        if(status && !video.paused && idleInterval == null){
+        if(status && idleInterval == null){
             idleInterval = startIdler();
         }
 
@@ -514,6 +514,9 @@ function MediaControls(video, prefix){
         }
     }
     function startIdler(){
+        // Do not start idler when video is paused
+        if(video.paused) return null;
+
         // Start Idler that hides controls after couple seconds
         return setInterval(function(){
             if(isControls()){
