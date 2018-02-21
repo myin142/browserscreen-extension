@@ -277,12 +277,12 @@ function MediaControls(video, prefix){
                 display: inline-flex;
             }
             .`+identifiers.buttons+`, .`+identifiers.playSpeed+`, .`+identifiers.playSpeed+` ul{
-                border: none;
-                background: none;
+                border: none !important;
+                background: none !important;
                 cursor: pointer;
                 outline: 0;
                 width: `+values.buttonWidth+`px;
-                padding: 0;
+                padding: 0 !important;
                 margin: 0;
                 position: relative;
             }
