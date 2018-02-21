@@ -325,6 +325,7 @@ function MediaControls(video, prefix){
             }
             .`+identifiers.timeDisplay+`, .`+identifiers.qualityLabel+`{
                 padding: 0 0.7em;
+                max-width: 200px;
             }
             .`+identifiers.playSpeed+` ul{
                 position: absolute;
