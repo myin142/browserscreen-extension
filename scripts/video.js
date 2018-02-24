@@ -21,6 +21,7 @@ function MediaControls(video, prefix){
 
         progressBar: prefix + "progress-bar",
         progressContainer: prefix + "progress-bar-container",
+        progessHover: prefix + "progress-bar-hover",
         currProgress: prefix + "curr-progress-bar",
         currBuffer: prefix + "curr-buffered-bar",
         previewTime: prefix + "progress-bar-time",
@@ -146,6 +147,7 @@ function MediaControls(video, prefix){
         video.addEventListener("mouseenter", videoMouseEnterListener);
         video.addEventListener("mousemove", videoMouseMoveListener);
         container.addEventListener("mousemove", videoMouseMoveListener);
+        container.addEventListener("transitionend", controlsTransitionEndListener);
     }
     function videoEndedListener(){
         changeReplay(playBtn);
@@ -229,19 +231,15 @@ function MediaControls(video, prefix){
     }
     function videoMouseEnterListener(){
         // Show Controls when Mouse Enters Video
-        if(!video.paused){
+        if(!video.paused && container.getAttribute("data-transition") != "true"){
             showControls(1);
         }
     }
     function videoMouseMoveListener(){
-        // Reset Idler if mouse moving or show Controls if it is hidden
-        if(!video.paused){
-            if(isControls()){
-                values.idler = 0;
-            }else{
-                showControls(1);
-            }
-        }
+        resetIdler();
+    }
+    function controlsTransitionEndListener(){
+        container.setAttribute("data-transition", "false");
     }
 
     function createStyle(){
@@ -352,13 +350,13 @@ function MediaControls(video, prefix){
                 height: `+values.progressContainer+`px;
                 cursor: pointer;
             }
-            .`+identifiers.progressContainer+`:hover .`+identifiers.progressBar+`{
+            .`+identifiers.progressHover+`:hover .`+identifiers.progressBar+`{
                 bottom: -`+(values.progressContainer - (values.progressHeight * 2))+`px;
             }
-            .`+identifiers.progressContainer+`:hover .`+identifiers.progressBar+` *:not(.`+identifiers.previewTime+`), .`+identifiers.progressContainer+`:hover .`+identifiers.progressBar+`::before{
+            .`+identifiers.progressHover+`:hover .`+identifiers.progressBar+` *:not(.`+identifiers.previewTime+`), .`+identifiers.progressContainer+`:hover .`+identifiers.progressBar+`::before{
                 height: `+(values.progressHeight * 2)+`px;
             }
-            .`+identifiers.progressContainer+`:hover .`+identifiers.previewTime+`{
+            .`+identifiers.progressHover+`:hover .`+identifiers.previewTime+`{
                 display: block;
             }
             .`+identifiers.progressBar+`{
@@ -478,8 +476,18 @@ function MediaControls(video, prefix){
         }
     }
     function showControls(status){
+        // No hover for progress bar when hidden and prevent mouseEnter event during transition
+        if(!status){
+            container.setAttribute("data-transition", "true");
+            progressBar.classList.remove(identifiers.progressHover);
+        }else{
+            progressBar.classList.add(identifiers.progressHover);
+        }
+
         // Toggle Video Controls
         video.style.cursor = (status) ? "" : "none";
+        container.style.cursor = (status) ? "" : "none";
+        progressBar.style.cursor = (status) ? "" : "none";
         container.style.height = (status) ? "" : "0px";
 
         // Start Idler if controls are shown and video is playing
@@ -522,12 +530,38 @@ function MediaControls(video, prefix){
         return setInterval(function(){
             if(isControls()){
                 if(values.idler == 1){
-                    showControls(0);
+                    if(isPointer()){
+                        resetIdler();
+                    }else{
+                        showControls(0);
+                    }
                 }else{
                     values.idler++;
                 }
             }
         }, 1500);
+    }
+    function resetIdler(){
+        // Reset Idler if mouse moving or show Controls if it is hidden
+        if(!video.paused){
+            if(isControls()){
+                values.idler = 0;
+            }else{
+                showControls(1);
+            }
+        }
+    }
+    function isPointer(){
+        var hovers = document.querySelector(":hover");
+
+        if(hovers == null) return false;
+
+        var innerHover;
+        while(hovers){
+            innerHover = hovers;
+            hovers = innerHover.querySelector(":hover");
+        }
+        return window.getComputedStyle(innerHover).cursor == "pointer";
     }
 
     /*** Controls UI ***/
@@ -542,7 +576,7 @@ function MediaControls(video, prefix){
     // Progress Bar
     function createProgressBar(){
         var container = document.createElement("DIV");
-        container.classList.add(identifiers.progressContainer);
+        container.classList.add(identifiers.progressContainer, identifiers.progressHover);
 
         // Create Progress Bar Container
         var bar = document.createElement("DIV");
