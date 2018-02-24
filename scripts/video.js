@@ -144,7 +144,6 @@ function MediaControls(video, prefix){
         video.addEventListener("waiting", videoWaitListener);
         video.addEventListener("playing", videoPlayingListener);
         video.addEventListener("mouseleave", videoMouseLeaveListener);
-        video.addEventListener("mouseenter", videoMouseEnterListener);
         video.addEventListener("mousemove", videoMouseMoveListener);
         container.addEventListener("mousemove", videoMouseMoveListener);
         container.addEventListener("transitionend", controlsTransitionEndListener);
@@ -227,12 +226,6 @@ function MediaControls(video, prefix){
         // Hide Controls when Mouse leaves video area
         if(!video.paused && !insideBoundary(e)){
             showControls(0);
-        }
-    }
-    function videoMouseEnterListener(){
-        // Show Controls when Mouse Enters Video
-        if(!video.paused && container.getAttribute("data-transition") != "true"){
-            showControls(1);
         }
     }
     function videoMouseMoveListener(){
@@ -459,7 +452,6 @@ function MediaControls(video, prefix){
         video.removeEventListener("waiting", videoWaitListener);
         video.removeEventListener("playing", videoPlayingListener);
         video.removeEventListener("mouseleave", videoMouseLeaveListener);
-        video.removeEventListener("mouseenter", videoMouseEnterListener);
         video.removeEventListener("mousemove", videoMouseMoveListener);
     }
     function displayLoading(){
@@ -553,7 +545,6 @@ function MediaControls(video, prefix){
     }
     function isPointer(){
         var hovers = document.querySelector(":hover");
-
         if(hovers == null) return false;
 
         var innerHover;
