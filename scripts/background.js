@@ -1,4 +1,11 @@
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+// Cross Browser Support
+window.browser = (function(){
+	return window.msBrowser ||
+		window.browser ||
+		window.chrome
+})();
+
+browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	var first = false;
 
 	// Resize first found Video
@@ -9,16 +16,16 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	}
 
 	// Search for sub frame in other frames
-	if(message.subWindow) chrome.tabs.sendMessage(sender.tab.id, {subWindow: message.subWindow});
+	if(message.subWindow) browser.tabs.sendMessage(sender.tab.id, {subWindow: message.subWindow});
 
 	// Send Message to Resize/Restore
-	if(message.resize) chrome.tabs.sendMessage(sender.tab.id, {resize: true});
-	if(message.restore) chrome.tabs.sendMessage(sender.tab.id, {restore: true});
+	if(message.resize) browser.tabs.sendMessage(sender.tab.id, {resize: true});
+	if(message.restore) browser.tabs.sendMessage(sender.tab.id, {restore: true});
 });
 
-chrome.browserAction.onClicked.addListener(function(tab){
-	chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+browser.browserAction.onClicked.addListener(function(tab){
+	browser.tabs.query({active: true, currentWindow: true}, function(tabs){
 		// Resize Video
-		chrome.tabs.sendMessage(tabs[0].id, {start: true});
+		browser.tabs.sendMessage(tabs[0].id, {start: true});
 	});
 });

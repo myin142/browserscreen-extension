@@ -1,3 +1,10 @@
+// Cross Browser Support
+window.browser = (function(){
+	return window.msBrowser ||
+		window.browser ||
+		window.chrome
+})();
+
 var debugging = false;
 
 var videoClass = "browserscreen_VideoIDClass";
@@ -7,7 +14,7 @@ var controlsID = "browserscreen_VideoControlsID";
 
 var mControls = null;
 
-chrome.runtime.onMessage.addListener(function(msg){
+browser.runtime.onMessage.addListener(function(msg){
 	if(debugging) console.log("Window: " + window.location.href);
 
 	// Check if resize or restore
@@ -17,9 +24,9 @@ chrome.runtime.onMessage.addListener(function(msg){
 		// Detect active BrowerScreen by Main Style
 		var style = document.querySelector("#" + styleID);
 		if(style == null){
-			chrome.runtime.sendMessage({resize: true});
+			browser.runtime.sendMessage({resize: true});
 		}else{
-			chrome.runtime.sendMessage({restore: true});
+			browser.runtime.sendMessage({restore: true});
 		}
 	}
 
@@ -34,7 +41,7 @@ chrome.runtime.onMessage.addListener(function(msg){
 		}
 
 		// Found a Video
-		chrome.runtime.sendMessage({found: true}, function(response){
+		browser.runtime.sendMessage({found: true}, function(response){
 			if(debugging){
 				console.log("Resize Video");
 				console.log(vid);
@@ -162,7 +169,7 @@ function resizeElements(elem){
 	// Resize all top frames
 	if(window != window.top){
 		if(debugging) console.log("Searching for frame: " + window.location.href);
-		chrome.runtime.sendMessage({subWindow: window.location.href});
+		browser.runtime.sendMessage({subWindow: window.location.href});
 	}
 }
 
@@ -174,11 +181,11 @@ function getFormattedSource(src){
 // Find Videos in Website: FLASH, HTML5, EMBEDED. Flash before HTML5 for Crunchyroll
 function findVideos(){
 	// Search Flash Videos
-	var	vid = document.querySelector("object[type='application/x-shockwave-flash']");
+	var vid = document.querySelector("video");
 
 	// Search HTML5 Videos
 	if(vid == null){
-		vid = document.querySelector("video");
+		vid = document.querySelector("object[type='application/x-shockwave-flash']");
 
 		// Search EMBEDed Videos
 		if(vid == null){
