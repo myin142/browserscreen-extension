@@ -483,7 +483,7 @@ function MediaControls(video, prefix){
         container.style.height = (status) ? "" : "0px";
 
         // Start Idler if controls are shown and video is playing
-        if(status && idleInterval == null){
+        if(!video.paused && status && idleInterval == null){
             idleInterval = startIdler();
         }
 
