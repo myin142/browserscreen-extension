@@ -325,7 +325,7 @@ function MediaControls(video, prefix){
                 list-style: none;
                 line-height: 25px;
                 display: none;
-                background: rgba(0,0,0,0.6);
+                background: rgba(0,0,0,0.6) !important;
             }
             .`+identifiers.playSpeed+` li:hover{
                 background: rgba(60,60,60,0.8);
