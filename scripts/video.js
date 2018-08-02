@@ -212,9 +212,7 @@ function MediaControls(video, prefix){
         }
     }
     function videoRateListener(){
-        // Update Playback Rate Label
-        var rateText = playSpeedBtn.querySelector("SPAN");
-        rateText.innerHTML = video.playbackRate + "x";
+        updatePlayback();
     }
     function videoProgressListener(){
         updateCurrentBuffer();
@@ -225,6 +223,7 @@ function MediaControls(video, prefix){
     }
     function videoPlayingListener(){
         logger("Video playable");
+        updatePlayback();
 
         // Hide Loading Icon when playable
         var loading = container.querySelector("." + identifiers.loading);
@@ -774,6 +773,11 @@ function MediaControls(video, prefix){
     function toggleDisplay(elem){
         var display = elem.style.display;
         elem.style.display = (display == "block") ? "none" : "block";
+    }
+    function updatePlayback(){
+        // Update Playback Rate Label
+        var rateText = playSpeedBtn.querySelector("SPAN");
+        rateText.innerHTML = video.playbackRate + "x";
     }
 
     // Quality Button
