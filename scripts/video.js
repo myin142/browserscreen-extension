@@ -31,6 +31,8 @@ function MediaControls(video, prefix){
 
     // Values for Elements
     var values = {
+        debugging: true,
+
         controlsHeight: 36,
         buttonWidth: 46,
         sliderWidth: 52,
@@ -150,6 +152,7 @@ function MediaControls(video, prefix){
     }
     function videoEndedListener(){
         changeReplay(playBtn);
+        logger("Video Ended.");
     }
     function videoVolumeListener(){
         updateVolumeButton();
@@ -158,12 +161,14 @@ function MediaControls(video, prefix){
         // Play Video and Start Idler
         changePause(playBtn);
         idleInterval = startIdler();
+        logger("Play Video.");
     }
     function videoPauseListener(){
         // Paused Video and show Controls, Stopping Idler
         changePlay(playBtn);
         clearIdler();
         showControls(1);
+        logger("Pause Video.");
     }
     function videoTimeListener(){
         // No Update on seeking and paused videos
@@ -216,8 +221,11 @@ function MediaControls(video, prefix){
     }
     function videoWaitListener(){
         displayLoading();
+        logger("Video Waiting");
     }
     function videoPlayingListener(){
+        logger("Video playable");
+
         // Hide Loading Icon when playable
         var loading = container.querySelector("." + identifiers.loading);
         if(loading != null)
@@ -229,6 +237,7 @@ function MediaControls(video, prefix){
             showControls(0);
             clearIdler();
         }
+        logger("Mouse Leaving");
     }
     function videoMouseMoveListener(){
         // Show Controls and Start Idler on Enter
@@ -238,6 +247,7 @@ function MediaControls(video, prefix){
         }
 
         resetIdler();
+        logger("Mouse Moving.");
     }
     function controlsTransitionEndListener(){
         container.setAttribute("data-transition", "false");
@@ -489,6 +499,12 @@ function MediaControls(video, prefix){
         container.style.cursor = (status) ? "" : "none";
         progressBar.style.cursor = (status) ? "" : "none";
         container.style.height = (status) ? "" : "0px";
+
+        if(status){
+            logger("Show Controls");
+        }else{
+            logger("Hide Controls");
+        }
     }
     function isControls(){
         // Check if Controls are hidden or not
@@ -521,6 +537,7 @@ function MediaControls(video, prefix){
         }
 
         // Start Idler that hides controls after couple seconds
+        logger("Start Idler");
         return setInterval(function(){
             if(isControls()){
                 if(values.idler == 1){
@@ -541,10 +558,12 @@ function MediaControls(video, prefix){
         if(values.idler != 0){
             values.idler = 0;
         }
+        logger("Reset Idler");
     }
     function clearIdler(){
         clearInterval(idleInterval);
         idleInterval = null;
+        logger("Stop Idler");
     }
     function isPointer(){
         var hovers = document.querySelector(":hover");
@@ -556,6 +575,11 @@ function MediaControls(video, prefix){
             hovers = innerHover.querySelector(":hover");
         }
         return window.getComputedStyle(innerHover).cursor == "pointer";
+    }
+    function logger(msg){
+        if(values.debugging){
+            console.log(msg);
+        }
     }
 
     /*** Controls UI ***/
