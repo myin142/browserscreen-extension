@@ -162,6 +162,7 @@ function MediaControls(video, prefix){
     function videoPauseListener(){
         // Paused Video and show Controls, Stopping Idler
         changePlay(playBtn);
+        clearIdler();
         showControls(1);
     }
     function videoTimeListener(){
@@ -226,9 +227,16 @@ function MediaControls(video, prefix){
         // Hide Controls when Mouse leaves video area
         if(!video.paused && !insideBoundary(e)){
             showControls(0);
+            clearIdler();
         }
     }
     function videoMouseMoveListener(){
+        // Show Controls and Start Idler on Enter
+        if(!video.paused){
+            showControls(1);
+            idleInterval = startIdler();
+        }
+
         resetIdler();
     }
     function controlsTransitionEndListener(){
@@ -481,18 +489,6 @@ function MediaControls(video, prefix){
         container.style.cursor = (status) ? "" : "none";
         progressBar.style.cursor = (status) ? "" : "none";
         container.style.height = (status) ? "" : "0px";
-
-        // Start Idler if controls are shown and video is playing
-        if(!video.paused && status && idleInterval == null){
-            idleInterval = startIdler();
-        }
-
-        // Clear Idler if controls are hidden or video is paused
-        if(!status || video.paused){
-            clearInterval(idleInterval);
-            values.idler = 0;
-            idleInterval = null;
-        }
     }
     function isControls(){
         // Check if Controls are hidden or not
@@ -515,8 +511,14 @@ function MediaControls(video, prefix){
         }
     }
     function startIdler(){
-        // Do not start idler when video is paused
-        if(video.paused) return null;
+        if(video.paused){
+            clearIdler();
+            return null;
+        }
+
+        if(idleInterval != null){
+            clearIdler();
+        }
 
         // Start Idler that hides controls after couple seconds
         return setInterval(function(){
@@ -526,6 +528,7 @@ function MediaControls(video, prefix){
                         resetIdler();
                     }else{
                         showControls(0);
+                        clearIdler();
                     }
                 }else{
                     values.idler++;
@@ -535,13 +538,13 @@ function MediaControls(video, prefix){
     }
     function resetIdler(){
         // Reset Idler if mouse moving or show Controls if it is hidden
-        if(!video.paused){
-            if(isControls()){
-                values.idler = 0;
-            }else{
-                showControls(1);
-            }
+        if(values.idler != 0){
+            values.idler = 0;
         }
+    }
+    function clearIdler(){
+        clearInterval(idleInterval);
+        idleInterval = null;
     }
     function isPointer(){
         var hovers = document.querySelector(":hover");
