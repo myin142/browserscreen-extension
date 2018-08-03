@@ -489,6 +489,7 @@ function MediaControls(video, prefix){
         if(!status){
             container.setAttribute("data-transition", "true");
             progressBar.classList.remove(identifiers.progressHover);
+            playSpeedBtn.querySelector("UL").style.display = "none";
         }else{
             progressBar.classList.add(identifiers.progressHover);
         }
