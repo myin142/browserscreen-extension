@@ -539,14 +539,10 @@ function MediaControls(video, prefix){
         // Start Idler that hides controls after couple seconds
         logger("Start Idler");
         return setInterval(function(){
-            if(isControls()){
+            if(isControls() && !isPointer()){
                 if(values.idler == 1){
-                    if(isPointer()){
-                        resetIdler();
-                    }else{
-                        showControls(0);
-                        clearIdler();
-                    }
+                    showControls(0);
+                    clearIdler();
                 }else{
                     values.idler++;
                 }
@@ -574,7 +570,10 @@ function MediaControls(video, prefix){
             innerHover = hovers;
             hovers = innerHover.querySelector(":hover");
         }
-        return window.getComputedStyle(innerHover).cursor == "pointer";
+
+        var pointer = window.getComputedStyle(innerHover).cursor == "pointer";
+        logger("Is Pointer: " + pointer);
+        return pointer;
     }
     function logger(msg){
         if(values.debugging){
