@@ -240,7 +240,7 @@ function MediaControls(video, prefix){
     }
     function videoMouseMoveListener(){
         // Show Controls and Start Idler on Enter
-        if(!video.paused){
+        if(!video.paused && !isControls()){
             showControls(1);
             idleInterval = startIdler();
         }
