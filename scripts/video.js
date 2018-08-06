@@ -239,8 +239,10 @@ function MediaControls(video, prefix){
         logger("Mouse Leaving");
     }
     function videoMouseMoveListener(){
-        // Show Controls and Start Idler on Enter
-        if(!video.paused && !isControls()){
+        if(video.paused) return;
+
+        // Show Controls and Start Idler if controls hidden
+        if(!isControls()){
             showControls(1);
             idleInterval = startIdler();
         }
