@@ -565,7 +565,10 @@ function MediaControls(video, prefix){
     }
     function isPointer(){
         var hovers = document.querySelector(":hover");
-        if(hovers == null) return false;
+        if(hovers == null){
+            logger("No Hover Element");
+            return false;
+        }
 
         var innerHover;
         while(hovers){
