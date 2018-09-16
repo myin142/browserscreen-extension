@@ -5,6 +5,8 @@ const identifiers = {
     buttons: prefix + "controls-btn",
     slider: prefix + "slider",
     sliderHandle: prefix + "slider-handle",
+    sliderBars: prefix + "slider-bars",
+    sliderBarMain: prefix + "slider-bar-main",
     volSlider: prefix + "volume-slider",
     progressSlider: prefix + "progress-slider",
 
@@ -36,7 +38,7 @@ const values = {
 
     controlsHeight: 36,
     buttonWidth: 46,
-    sliderWidth: 52,
+    volSliderWidth: 52,
     sliderHandleSize: 12,
     sliderBarHeight: 3,
     progressHeight: 3,
@@ -97,12 +99,16 @@ class MediaPlayer{
         rightContainer.appendMultiple([fullscreenBtn]);
         subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
 
+        [volumeSlider, progressBar].forEach((item) => {
+            item.init();
+        });
+
         // Add Event Listener to Video
         this.videoEvents = new VideoEvent(video);
         this.videoEvents.addEvents(["play", "pause", "ended"], [playBtn]);
-        this.videoEvents.addEvent("volumechange", [volumeBtn, volumeSlider])
-        this.videoEvents.addEvent("webkitfullscreenchange", [fullscreenBtn])
-        this.videoEvents.addEvent("timeupdate", [progressBar])
+        this.videoEvents.addEvent("volumechange", [volumeBtn, volumeSlider]);
+        this.videoEvents.addEvent("webkitfullscreenchange", [fullscreenBtn]);
+        this.videoEvents.addEvent("timeupdate", [progressBar]);
     }
 
     removeControls(){
@@ -253,13 +259,35 @@ class MediaPlayer{
             .`+identifiers.buttons+`:hover path{
                 fill: white;
             }
+            .`+identifiers.volSlider+`.`+identifiers.slider+`{
+                /*width: `+values.volSliderWidth+`px;*/
+            }
             .`+identifiers.slider+`{
                 display: inline-block;
                 position: relative;
                 height: 100%;
-                overflow: hidden;
-                width: `+values.sliderWidth+`px;
+                width: 100%;
                 cursor: pointer;
+            }
+            .`+identifiers.slider+`::after{
+                content: '';
+                display: block;
+                background: rgba(255,255,255,0.2);
+            }
+            .`+identifiers.sliderBarMain+`{
+                background: white;
+                height: 100%;
+                -webkit-transition: transform .5s;
+                transition: transform .5s;
+                transform-origin: 0% 50%;
+                transform: scaleX(0.3);
+            }
+            .`+identifiers.sliderBars+`, .`+identifiers.slider+`::after{
+                position: absolute;
+                height: `+values.sliderBarHeight+`px;
+                margin-top: -`+(values.sliderBarHeight-1)+`px;
+                width: 100%;
+                top: 50%;
             }
             .`+identifiers.sliderHandle+`{
                 position: absolute;
@@ -269,23 +297,6 @@ class MediaPlayer{
                 border-radius: `+(values.sliderHandleSize/2)+`px;
                 margin-top: -`+(values.sliderHandleSize/2)+`px;
                 background: white;
-            }
-            .`+identifiers.sliderHandle+`::before{
-                background: white;
-                left: -`+(values.sliderWidth - (values.sliderHandleSize/2))+`px;
-            }
-            .`+identifiers.sliderHandle+`::after{
-                background: rgba(255,255,255,0.2);
-                left: `+(values.sliderHandleSize/2)+`px;
-            }
-            .`+identifiers.sliderHandle+`::before, .`+identifiers.sliderHandle+`::after{
-                content: '';
-                position: absolute;
-                display: block;
-                top: 50%;
-                height: `+values.sliderBarHeight+`px;
-                margin-top: -2px;
-                width: `+values.sliderWidth+`px;
             }
             .`+identifiers.timeDisplay+`, .`+identifiers.qualityLabel+`{
                 padding: 0 0.7em;
@@ -309,12 +320,14 @@ class MediaPlayer{
             .`+identifiers.playSpeed+` span:hover{
                 color: white;
             }
-            .`+identifiers.progressContainer+`{
-                position: absolute;
+            .`+identifiers.progressSlider+`{
+                /*float: left;
                 width: 100%;
                 top: -`+values.progressContainer+`px;
-                height: `+values.progressContainer+`px;
-                cursor: pointer;
+                height: `+values.progressContainer+`px;*/
+            }
+            .`+identifiers.progressContainer+`{
+                position: absolute;
             }
             .`+identifiers.progressHover+`:hover .`+identifiers.progressBar+`{
                 bottom: -`+(values.progressContainer - (values.progressHeight * 2))+`px;
@@ -585,10 +598,11 @@ class Slider{
         this.max = values.max;
         this.updateValue = values.updateValue;
         this.realtime = true;
-        this.initNode = false;
         this.dragging = false;
         this.slider = this.createSlider();
         this.node = this.slider.node;
+        this.handle = this.node.querySelector("." + identifiers.sliderHandle);
+        this.sliderBars = this.node.querySelector("." + identifiers.sliderBars);
     }
     setRealtime(value){
         this.realtime = value;
@@ -611,25 +625,23 @@ class Slider{
     createSlider(){
         let slider = new Container(identifiers.slider);
         let sliderHandle = new Container(identifiers.sliderHandle);
-        sliderHandle.node.style.left = this.currOffset + "px";
-        slider.append(sliderHandle);
+        let sliderBars = new Container(identifiers.sliderBars);
+        let sliderBarMain = new Container(identifiers.sliderBarMain);
+        sliderBars.append(sliderBarMain);
+        slider.appendMultiple([sliderBars, sliderHandle]);
 
         // Add EventListener to enable dragging slider
         slider.node.addEventListener("mousedown", (e) => {
             this.dragging = true;
             if(this.beforeDrag != undefined) this.beforeDrag();
-            if(this.realtime) this.updateValue(this.getNewValue(e));
+
+            realtimeUpdate(e);
         });
         document.addEventListener("mousemove", (e) => {
             if(this.dragging){
                 if(this.whileDrag != undefined) this.whileDrag();
-                let newValue = this.getNewValue(e);
-                if(this.realtime){
-                    this.updateValue(newValue);
-                }else{ // When not realtime, move only slider handle
-                    let tempOffset = this.realWidth * (newValue / this.max);
-                    this.showOffset(tempOffset);
-                }
+
+                realtimeUpdate(e);
             }
         });
         document.addEventListener("mouseup", (e) => {
@@ -642,14 +654,21 @@ class Slider{
 
         return slider;
     }
-    getNewValue(e){
-        if(!this.initNode){
-            this.initNodeValues();
+    realtimeUpdate(e){
+        let newValue = this.getNewValue(e);
+        if(this.realtime){
+            this.updateValue(newValue);
+        }else{
+            let tempOffset = this.realWidth * (newValue / this.max);
+            this.updateHandle(newValue);
         }
+    }
+    getNewValue(e){
+        let handleSize = this.updateNodeValues();
 
         // Has to be called everytime, because window can be resized
-        this.sliderL = this.node.getBoundingClientRect().left + this.handleSize/2;
-        this.sliderR = this.node.getBoundingClientRect().right - this.handleSize/2;
+        this.sliderL = this.node.getBoundingClientRect().left + handleSize/2;
+        this.sliderR = this.node.getBoundingClientRect().right - handleSize/2;
 
         // Get relative x position inside slider
         let max = this.sliderR - this.sliderL;
@@ -661,16 +680,22 @@ class Slider{
         }
 
         let percentage = relX / this.realWidth;
+        console.log(percentage);
         return percentage * this.max;
     }
-    initNodeValues(){
-        this.sliderSize = parseInt(Utils.getComputedStyle(this.node, "width"));
-        this.handleSize = parseInt(Utils.getComputedStyle(this.node.firstChild, "width"));
-        this.realWidth = this.sliderSize - this.handleSize;
-        this.initNode = true;
+    init(){ // For initial position of slider elements
+        this.updateNodeValues();
+        this.updateHandle(this.currOffset);
     }
-    showOffset(offset){
-        this.node.firstChild.style.left = offset + "px";
+    updateNodeValues(){
+        let sliderSize = parseInt(Utils.getComputedStyle(this.node, "width"));
+        let handleSize = parseInt(Utils.getComputedStyle(this.handle, "width"));
+        this.realWidth = sliderSize - handleSize;
+
+        return handleSize;
+    }
+    updateHandle(offset){
+        this.handle.style.left = offset + "px";
     }
     update(){
         if(this.label != undefined){
@@ -678,7 +703,7 @@ class Slider{
             this.node.setAttribute("aria-label", percent.toFixed(0) + "% " + this.label);
         }
 
-        this.showOffset(this.currOffset);
+        this.updateHandle(this.currOffset);
     }
 }
 
