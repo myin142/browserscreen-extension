@@ -3,8 +3,10 @@ const prefix = "browserscreen-";
 const identifiers = {
     style: prefix + "videoControlsStyle",
     buttons: prefix + "controls-btn",
-    slider: prefix + "volume-slider",
-    sliderHandle: prefix + "volume-slider-handle",
+    slider: prefix + "slider",
+    sliderHandle: prefix + "slider-handle",
+    volSlider: prefix + "volume-slider",
+    progressSlider: prefix + "progress-slider",
 
     timeDisplay: prefix + "time-display",
     timeCurr: prefix + "time-current",
@@ -76,29 +78,31 @@ class MediaPlayer{
         let rightContainer = new Container(identifiers.rightContainer);
         let subContainer = new Container(identifiers.subContainer);
         let container = new Container(identifiers.container);
-        subContainer.appendMultiple([leftContainer, rightContainer]);
         container.append(subContainer);
 
         document.body.appendChild(container.node);
-        document.head.appendChild(this._createStyle());
+        document.head.appendChild(this.createStyle());
 
         // Create Controls
-        let playBtn = this._createPlayButton();
-        let volumeBtn = this._createVolumeButton();
-        let forwardBtn = this._createForwardButton();
-        let rewindBtn = this._createRewindButton();
-        let fullscreenBtn = this._createFullscreenButton();
-        let volumeSlider = this._createVolumeSlider();
+        let playBtn = this.createPlayButton();
+        let volumeBtn = this.createVolumeButton();
+        let forwardBtn = this.createForwardButton();
+        let rewindBtn = this.createRewindButton();
+        let fullscreenBtn = this.createFullscreenButton();
+        let volumeSlider = this.createVolumeSlider();
+        let progressBar = this.createProgressBar();
 
         // Add Controls to Containers
         leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider]);
         rightContainer.appendMultiple([fullscreenBtn]);
+        subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
 
         // Add Event Listener to Video
         this.videoEvents = new VideoEvent(video);
         this.videoEvents.addEvents(["play", "pause", "ended"], [playBtn]);
         this.videoEvents.addEvent("volumechange", [volumeBtn, volumeSlider])
         this.videoEvents.addEvent("webkitfullscreenchange", [fullscreenBtn])
+        this.videoEvents.addEvent("timeupdate", [progressBar])
     }
 
     removeControls(){
@@ -116,40 +120,49 @@ class MediaPlayer{
         this.video = null;
     }
 
-    _createFullscreenButton(){
-        return this._createButton([
+    createFullscreenButton(){
+        return this.createButton([
             {name: "fullscreen", condition: () => document.webkitFullscreenElement == null, action: () => this.video.webkitRequestFullscreen()},
             {name: "exitFullscreen", condition: () => document.webkitFullscreenElement == this.video, action: () => document.webkitExitFullscreen()}
         ]);
     }
-    _createRewindButton(){
-        return this._createButton([
+    createRewindButton(){
+        return this.createButton([
             {name: "rewind", condition: () => true, action: () => this.video.currentTime -= values.rewindAmount}
         ]);
     }
-    _createForwardButton(){
-        return this._createButton([
+    createForwardButton(){
+        return this.createButton([
             {name: "fastForward", condition: () => true, action: () => this.video.currentTime += values.rewindAmount}
         ]);
     }
-    _createVolumeButton(){
-        return this._createButton([
+    createVolumeButton(){
+        let mute = function(){
+            this.video.muted = true
+            this.savedVolume = this.video.volume;
+            this.video.volume = 0;
+        }
+        return this.createButton([
             {name: "muted", condition: () => this.video.muted || this.video.volume == 0, action: () => {
                 this.video.muted = false;
+                if(this.savedVolume != null){
+                    this.video.volume = this.savedVolume;
+                    this.savedVolume = null;
+                }
                 if(this.video.volume == 0) this.video.volume = 1;
             }},
-            {name: "volumeHigh", condition: () => !this.video.muted && this.video.volume >= .5, action: () => this.video.muted = true},
-            {name: "volumeLow", condition: () => !this.video.muted && this.video.volume < .5, action: () => this.video.muted = true}
+            {name: "volumeHigh", condition: () => !this.video.muted && this.video.volume >= .5, action: mute.bind(this)},
+            {name: "volumeLow", condition: () => !this.video.muted && this.video.volume < .5, action: mute.bind(this)}
         ]);
     }
-    _createPlayButton(){
-        return this._createButton([
+    createPlayButton(){
+        return this.createButton([
             {name: "play", condition: () => this.video.paused, action: () => this.video.play()},
             {name: "pause", condition: () => !this.video.paused, action: () => this.video.pause()},
             {name: "replay", condition: () => this.video.ended, action: () => this.video.play()}
         ]);
     }
-    _createButton(states){
+    createButton(states){
         let btn = new Button();
         states.forEach((item) => {
             btn.addState(item.name, item.condition, item.action);
@@ -157,17 +170,44 @@ class MediaPlayer{
         return btn;
     }
 
-    _createVolumeSlider(){
-        let slider = new Slider(() => this.video.volume, 0, 1, (newValue) => {
-            this.video.volume = newValue;
+    createVolumeSlider(){
+        let slider = new Slider({
+            valueFn: () => this.video.volume,
+            min: 0,
+            max: 1,
+            updateValue: (newValue) => this.video.volume = newValue
+        });
+        slider.whileDrag(() => {
             if(this.video.volume > 0) this.video.muted = false;
             if(this.video.volume == 0) this.video.muted = true;
         });
         slider.setLabel("Volume");
+        slider.addClass(identifiers.volSlider);
         return slider;
     }
+    createProgressBar(){
+        let progress = new Slider({
+            valueFn: () => this.video.currentTime,
+            min: 0,
+            max: this.video.duration,
+            updateValue: (newValue) => this.video.currentTime = newValue
+        });
+        progress.beforeDrag(() => {
+            progress.wasPaused = this.video.paused;
+            this.video.pause();
+        });
+        progress.afterDrag(() => {
+            if(!progress.wasPaused)
+                this.video.play();
+        });
+        progress.setLabel("Video Progress");
+        progress.addClass(identifiers.progressSlider);
+        progress.setRealtime(false);
 
-    _createStyle(){
+        return progress;
+    }
+
+    createStyle(){
         let css = `
             video::-webkit-media-controls-enclosure{
                 display: none !important;
@@ -449,7 +489,7 @@ class VideoEvent{
  *
  */
 class Button {
-    static get _paths(){
+    static get paths(){
         return {
             play: "M 12,26 12,10 25,18 Z",
             pause: "M 12,26 16,26 16,10 12,10 z M 21,26 25,26 25,10 21,10 z",
@@ -481,24 +521,24 @@ class Button {
 
         // While Adding State, save current active State
         if(condition()){
-            this._changeState(this.states.length - 1);
+            this.changeState(this.states.length - 1);
         }
     }
     update(){
         this.states.forEach((item, index) =>{
             if(item.condition()){
-                this._changeState(index);
+                this.changeState(index);
             }
         });
     }
-    _changeState(index){
+    changeState(index){
         this.activeState = index;
         let label = this.states[this.activeState].label;
 
         // Change Button Icon
         let btn = this.node;
         btn.setAttribute("aria-label", label);
-        btn.querySelector("path").setAttribute("d", Button._paths[label])
+        btn.querySelector("path").setAttribute("d", Button.paths[label])
     }
 }
 
@@ -515,6 +555,7 @@ class Button {
  * @private @var {Boolean} dragging - Used to check if dragging is active
  * @private @var {String} label - Used for aria-label attribute
  * @private @var {Int} currOffset - Current Offset for Slider depending on Video Volume
+ * @private @var {Boolean} realtime - Whether update of value should happen in realtime @default true
  *
  * @constructor
  *  @param {Function()} changeVal -@see @var value
@@ -525,55 +566,90 @@ class Button {
  * @function setLabel - set aria-label value @see @var label
  *  @param {String} label
  *
+ * @function addClass - add class to node
+ *  @param {String} className
+ *
+ * @function update - Update Slider Node on video event change from @interface Listener
+ *
  * @private @function createSlider - Create Slider Node
  * @private @function changeValue - Change Value depending on relative x inside slider
- * @private @function update - Update Slider Node on video event change from @interface Listener
  *
  */
 class Slider{
-    get _currOffset(){
-        return this._realWidth * (this.value() / this.max);
+    get currOffset(){
+        return this.realWidth * (this.valueFn() / this.max);
     }
-    constructor(changeVal, min, max, action){
-        this.value = changeVal;
-        this.min = min;
-        this.max = max;
-        this.action = action;
-
-        this._realWidth = values.sliderWidth - values.sliderHandleSize;
-
-        this._dragging = false;
-        this.slider = this._createSlider();
+    constructor(values){
+        this.valueFn = values.valueFn
+        this.min = values.min;
+        this.max = values.max;
+        this.updateValue = values.updateValue;
+        this.realtime = true;
+        this.initNode = false;
+        this.dragging = false;
+        this.slider = this.createSlider();
         this.node = this.slider.node;
     }
-    setLabel(label){
-        this._label = label;
+    setRealtime(value){
+        this.realtime = value;
     }
-    _createSlider(){
+    setLabel(label){
+        this.label = label;
+    }
+    addClass(className){
+        this.slider.addClass(className);
+    }
+    beforeDrag(fn){
+        this.beforeDrag = fn;
+    }
+    whileDrag(fn){
+        this.whileDrag = fn;
+    }
+    afterDrag(fn){
+        this.afterDrag = fn;
+    }
+    createSlider(){
         let slider = new Container(identifiers.slider);
         let sliderHandle = new Container(identifiers.sliderHandle);
-        sliderHandle.node.style.left = this._currOffset + "px";
+        sliderHandle.node.style.left = this.currOffset + "px";
         slider.append(sliderHandle);
 
         // Add EventListener to enable dragging slider
         slider.node.addEventListener("mousedown", (e) => {
-            this._dragging = true;
-            this._changeVolume(e);
+            this.dragging = true;
+            if(this.beforeDrag != undefined) this.beforeDrag();
+            if(this.realtime) this.updateValue(this.getNewValue(e));
         });
         document.addEventListener("mousemove", (e) => {
-            if(this._dragging) this._changeValue(e);
+            if(this.dragging){
+                if(this.whileDrag != undefined) this.whileDrag();
+                let newValue = this.getNewValue(e);
+                if(this.realtime){
+                    this.updateValue(newValue);
+                }else{ // When not realtime, move only slider handle
+                    let tempOffset = this.realWidth * (newValue / this.max);
+                    this.showOffset(tempOffset);
+                }
+            }
         });
         document.addEventListener("mouseup", (e) => {
-            if(this._dragging) this._dragging = false;
+            if(this.dragging){
+                this.dragging = false;
+                if(this.afterDrag != undefined) this.afterDrag();
+                if(!this.realtime) this.updateValue(this.getNewValue(e));
+            }
         });
 
         return slider;
     }
-    _changeValue(e){
-        if(this.sliderL === undefined && this.sliderR === undefined){
-            this.sliderL = this.node.getBoundingClientRect().left + values.sliderHandleSize/2;
-            this.sliderR = this.node.getBoundingClientRect().right - values.sliderHandleSize/2;
+    getNewValue(e){
+        if(!this.initNode){
+            this.initNodeValues();
         }
+
+        // Has to be called everytime, because window can be resized
+        this.sliderL = this.node.getBoundingClientRect().left + this.handleSize/2;
+        this.sliderR = this.node.getBoundingClientRect().right - this.handleSize/2;
 
         // Get relative x position inside slider
         let max = this.sliderR - this.sliderL;
@@ -584,16 +660,25 @@ class Slider{
             relX = 0;
         }
 
-        let percentage = relX / this._realWidth;
-        this.action(percentage * this.max);
+        let percentage = relX / this.realWidth;
+        return percentage * this.max;
+    }
+    initNodeValues(){
+        this.sliderSize = parseInt(Utils.getComputedStyle(this.node, "width"));
+        this.handleSize = parseInt(Utils.getComputedStyle(this.node.firstChild, "width"));
+        this.realWidth = this.sliderSize - this.handleSize;
+        this.initNode = true;
+    }
+    showOffset(offset){
+        this.node.firstChild.style.left = offset + "px";
     }
     update(){
-        if(this._label != undefined){
-            let percent = (this.value() * 100) / this.max;
-            this.node.setAttribute("aria-label", percent.toFixed(0) + "% " + this._label);
+        if(this.label != undefined){
+            let percent = (this.valueFn() * 100) / this.max;
+            this.node.setAttribute("aria-label", percent.toFixed(0) + "% " + this.label);
         }
 
-        this.node.firstChild.style.left = this._currOffset + "px";
+        this.showOffset(this.currOffset);
     }
 }
 
@@ -673,9 +758,162 @@ class Utils{
         this.logger("Is Pointer: " + pointer);
         return pointer;
     }
+    static getComputedStyle(elem, style){
+        return window.getComputedStyle(elem, null).getPropertyValue(style);
+    }
 }
 
 function MediaControls(video, prefix){
+    // Progress Bar
+    function createProgressBar(){
+        var container = document.createElement("DIV");
+        container.classList.add(identifiers.progressContainer, identifiers.progressHover);
+
+        // Create Progress Bar Container
+        var bar = document.createElement("DIV");
+        bar.classList.add(identifiers.progressBar);
+
+        // Create Time Label that displays on hover
+        var timeLabel = document.createElement("DIV");
+        timeLabel.classList.add(identifiers.previewTime);
+
+        // Element for showing current Progress
+        var currProgress = document.createElement("DIV");
+        currProgress.classList.add(identifiers.currProgress);
+
+        // Element for showing closest buffered range
+        var currBuffered= document.createElement("DIV");
+        currBuffered.classList.add(identifiers.currBuffer);
+
+        var draggingTimeBar = false;
+        var wasPlaying = false;
+
+        // Show TimeStamp on hover at whole progress bar container
+        container.addEventListener("mousemove", function(e){
+            var offset = relativeMouseX(e, bar);
+            showTimestamp(offset);
+        });
+
+        // Make current Progress Bar to follow mouse until mouse up
+        container.addEventListener("mousedown", function(e){
+            if(!video.paused){
+                video.pause();
+                wasPlaying = true;
+            }
+            draggingTimeBar = true;
+            currProgress.style.transition = "transform 0s";
+            timeLabel.style.display = "block";
+            moveHandle(e);
+        });
+        document.addEventListener("mousemove", function(e){
+            if(draggingTimeBar) moveHandle(e);
+        });
+
+        // Seeking to selected Time
+        document.addEventListener("mouseup", function(e){
+            if(draggingTimeBar){
+                draggingTimeBar = false;
+                timeLabel.style.display = "";
+                currProgress.style.transition = "";
+                seekVideo(e);
+
+                if(wasPlaying){
+                    video.play();
+                    wasPlaying = false;
+                }
+            }
+        });
+
+        bar.appendChild(currBuffered);
+        bar.appendChild(currProgress);
+        container.appendChild(bar);
+        container.appendChild(timeLabel);
+        return container;
+
+        // Move current Progress Bar
+        function moveHandle(e){
+            var offset = relativeMouseX(e, bar);
+            showTimestamp(offset);
+
+            var percentage = getPercentage(offset);
+            currProgress.style.transform = "scaleX("+percentage+")";
+        }
+        // Seek to specified Time
+        function seekVideo(e){
+            var scale = currProgress.style.transform;
+            var percentage = scale.substring(scale.indexOf("(")+1, scale.indexOf(")"));
+            video.currentTime = percentage * video.duration;
+        }
+    }
+    function showTimestamp(offset){
+        // Show current Time on Label
+        var percentage = getPercentage(offset);
+        var time = video.duration * percentage;
+
+        var label = progressBar.querySelector("." + identifiers.previewTime);
+        label.innerHTML = normalizeTime(time);
+        label.style.left = (offset-label.offsetWidth/2) + "px";
+    }
+    function getPercentage(offset){
+        // Get Percentage of offset from whole progress bar
+        var bar = progressBar.querySelector("." + identifiers.progressBar);
+        var max = bar.getBoundingClientRect().right - bar.getBoundingClientRect().left;
+        var percentage = offset / max;
+        return percentage;
+    }
+    function relativeMouseX(e, bar){
+        // Get relative mouse X coordinates to progress bar
+        var progressBarL = bar.getBoundingClientRect().left;
+        var progressBarR = bar.getBoundingClientRect().right;
+        var mouseX = e.pageX;
+
+        var max = progressBarR - progressBarL;
+        var relX = mouseX - progressBarL;
+        if(relX >= max){
+            relX = max;
+        }else if(relX <= 0){
+            relX = 0;
+        }
+
+        return relX;
+    }
+    function getScaleByTime(time){
+        // Get Percentage of current Time to Video Duration for scaling Progress Bars
+        var percentage = time / video.duration;
+        return percentage;
+    }
+    function getBufferRangeIndex(){
+        // Get Index of closest Buffer Range to current Time
+        var buffers = video.buffered;
+        var index = 0;
+        for(var i = 0; i < buffers.length; i++){
+            var bufferEnd = buffers.end(i);
+            var lastBuffer = buffers.end(index);
+            if(bufferEnd > video.currentTime){
+                if(lastBuffer <= video.currentTime || (lastBuffer > video.currentTime && bufferEnd < lastBuffer)){
+                    index = i;
+                }
+            }
+        }
+        return index;
+    }
+    function updateCurrentBuffer(){
+        // Update Buffer to show closest buffer time
+        if(video.buffered.length > 0){
+            var bufferId = getBufferRangeIndex();
+            var currBuff = video.buffered.end(bufferId);
+            var currBuffered = progressBar.querySelector("." + identifiers.currBuffer);
+            currBuffered.style.transform = "scaleX("+getScaleByTime(currBuff)+")";
+        }
+    }
+    function updateCurrentProgress(){
+        // Scale current Progress Bar
+        var currTime = video.currentTime;
+        var currProgress = progressBar.querySelector("." + identifiers.currProgress);
+        currProgress.style.transform = "scaleX("+getScaleByTime(currTime)+")";
+    }
+
+
     // Quality Button
     function createQualityLabel(){
         var container = document.createElement("DIV");
@@ -975,155 +1213,6 @@ function MediaControls(video, prefix){
         }
 
     /*** Controls UI ***/
-
-    // Progress Bar
-    function createProgressBar(){
-        var container = document.createElement("DIV");
-        container.classList.add(identifiers.progressContainer, identifiers.progressHover);
-
-        // Create Progress Bar Container
-        var bar = document.createElement("DIV");
-        bar.classList.add(identifiers.progressBar);
-
-        // Create Time Label that displays on hover
-        var timeLabel = document.createElement("DIV");
-        timeLabel.classList.add(identifiers.previewTime);
-
-        // Element for showing current Progress
-        var currProgress = document.createElement("DIV");
-        currProgress.classList.add(identifiers.currProgress);
-
-        // Element for showing closest buffered range
-        var currBuffered= document.createElement("DIV");
-        currBuffered.classList.add(identifiers.currBuffer);
-
-        var draggingTimeBar = false;
-        var wasPlaying = false;
-
-        // Show TimeStamp on hover at whole progress bar container
-        container.addEventListener("mousemove", function(e){
-            var offset = relativeMouseX(e, bar);
-            showTimestamp(offset);
-        });
-
-        // Make current Progress Bar to follow mouse until mouse up
-        container.addEventListener("mousedown", function(e){
-            if(!video.paused){
-                video.pause();
-                wasPlaying = true;
-            }
-            draggingTimeBar = true;
-            currProgress.style.transition = "transform 0s";
-            timeLabel.style.display = "block";
-            moveHandle(e);
-        });
-        document.addEventListener("mousemove", function(e){
-            if(draggingTimeBar) moveHandle(e);
-        });
-
-        // Seeking to selected Time
-        document.addEventListener("mouseup", function(e){
-            if(draggingTimeBar){
-                draggingTimeBar = false;
-                timeLabel.style.display = "";
-                currProgress.style.transition = "";
-                seekVideo(e);
-
-                if(wasPlaying){
-                    video.play();
-                    wasPlaying = false;
-                }
-            }
-        });
-
-        bar.appendChild(currBuffered);
-        bar.appendChild(currProgress);
-        container.appendChild(bar);
-        container.appendChild(timeLabel);
-        return container;
-
-        // Move current Progress Bar
-        function moveHandle(e){
-            var offset = relativeMouseX(e, bar);
-            showTimestamp(offset);
-
-            var percentage = getPercentage(offset);
-            currProgress.style.transform = "scaleX("+percentage+")";
-        }
-        // Seek to specified Time
-        function seekVideo(e){
-            var scale = currProgress.style.transform;
-            var percentage = scale.substring(scale.indexOf("(")+1, scale.indexOf(")"));
-            video.currentTime = percentage * video.duration;
-        }
-    }
-    function showTimestamp(offset){
-        // Show current Time on Label
-        var percentage = getPercentage(offset);
-        var time = video.duration * percentage;
-
-        var label = progressBar.querySelector("." + identifiers.previewTime);
-        label.innerHTML = normalizeTime(time);
-        label.style.left = (offset-label.offsetWidth/2) + "px";
-    }
-    function getPercentage(offset){
-        // Get Percentage of offset from whole progress bar
-        var bar = progressBar.querySelector("." + identifiers.progressBar);
-        var max = bar.getBoundingClientRect().right - bar.getBoundingClientRect().left;
-        var percentage = offset / max;
-        return percentage;
-    }
-    function relativeMouseX(e, bar){
-        // Get relative mouse X coordinates to progress bar
-        var progressBarL = bar.getBoundingClientRect().left;
-        var progressBarR = bar.getBoundingClientRect().right;
-        var mouseX = e.pageX;
-
-        var max = progressBarR - progressBarL;
-        var relX = mouseX - progressBarL;
-        if(relX >= max){
-            relX = max;
-        }else if(relX <= 0){
-            relX = 0;
-        }
-
-        return relX;
-    }
-    function getScaleByTime(time){
-        // Get Percentage of current Time to Video Duration for scaling Progress Bars
-        var percentage = time / video.duration;
-        return percentage;
-    }
-    function getBufferRangeIndex(){
-        // Get Index of closest Buffer Range to current Time
-        var buffers = video.buffered;
-        var index = 0;
-        for(var i = 0; i < buffers.length; i++){
-            var bufferEnd = buffers.end(i);
-            var lastBuffer = buffers.end(index);
-            if(bufferEnd > video.currentTime){
-                if(lastBuffer <= video.currentTime || (lastBuffer > video.currentTime && bufferEnd < lastBuffer)){
-                    index = i;
-                }
-            }
-        }
-        return index;
-    }
-    function updateCurrentBuffer(){
-        // Update Buffer to show closest buffer time
-        if(video.buffered.length > 0){
-            var bufferId = getBufferRangeIndex();
-            var currBuff = video.buffered.end(bufferId);
-            var currBuffered = progressBar.querySelector("." + identifiers.currBuffer);
-            currBuffered.style.transform = "scaleX("+getScaleByTime(currBuff)+")";
-        }
-    }
-    function updateCurrentProgress(){
-        // Scale current Progress Bar
-        var currTime = video.currentTime;
-        var currProgress = progressBar.querySelector("." + identifiers.currProgress);
-        currProgress.style.transform = "scaleX("+getScaleByTime(currTime)+")";
-    }
 
     // Playback Speed Button
     function createPlaySpeedButton(){
