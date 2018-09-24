@@ -204,6 +204,9 @@ function createMainStyle(){
 	style.id = styleID;
 
 	var css = `
+		::-webkit-scrollbar{
+			display: none;
+		}
 		body, html{
 			overflow: hidden !important;
 		}
