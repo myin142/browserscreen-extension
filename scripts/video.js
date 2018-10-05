@@ -122,6 +122,7 @@ function MediaControls(video, prefix){
 
         // Remove all custom Listeners from Video
         removeListeners();
+        clearIdler();
         video.style.cursor = "";
     };
 
