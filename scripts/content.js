@@ -14,6 +14,16 @@ var controlsID = "browserscreen_VideoControlsID";
 
 var mControls = null;
 
+document.addEventListener("webkitfullscreenchange", (event) => {
+
+	if(document.webkitFullscreenElement){
+		document.webkitExitFullscreen();
+
+		let elem = document.webkitFullscreenElement;
+		resizeElements(elem);
+	}
+});
+
 browser.runtime.onMessage.addListener(function(msg){
 	if(debugging) console.log("Window: " + window.location.href);
 
