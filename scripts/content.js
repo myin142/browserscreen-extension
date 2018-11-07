@@ -17,12 +17,9 @@ var mControls = null;
 document.addEventListener("webkitfullscreenchange", (event) => {
 
 	if(document.webkitFullscreenElement){
-		document.webkitExitFullscreen();
-
 		let style = document.querySelector("#" + styleID);
-		if(style != null){
-			restoreElements();
-		}else{
+		if(style == null){
+			document.webkitExitFullscreen();
 			let elem = document.webkitFullscreenElement;
 			resizeElements(elem);
 		}
