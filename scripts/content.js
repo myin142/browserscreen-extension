@@ -19,8 +19,13 @@ document.addEventListener("webkitfullscreenchange", (event) => {
 	if(document.webkitFullscreenElement){
 		document.webkitExitFullscreen();
 
-		let elem = document.webkitFullscreenElement;
-		resizeElements(elem);
+		let style = document.querySelector("#" + styleID);
+		if(style != null){
+			restoreElements();
+		}else{
+			let elem = document.webkitFullscreenElement;
+			resizeElements(elem);
+		}
 	}
 });
 
