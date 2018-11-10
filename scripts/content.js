@@ -11,6 +11,7 @@ var videoClass = "browserscreen_VideoIDClass";
 var fullscreenClass = "browserscreen_FullscreenVideoClass";
 var styleID = "browserscreen_VideoStyleID";
 var controlsID = "browserscreen_VideoControlsID";
+var overlayClass = "browserscreen_OverlayClass";
 
 var mControls = null;
 
@@ -20,8 +21,11 @@ document.addEventListener("webkitfullscreenchange", (event) => {
 		let style = document.querySelector("#" + styleID);
 		if(style == null){
 			document.webkitExitFullscreen();
+
 			let elem = document.webkitFullscreenElement;
-			resizeElements(elem);
+			let vid = findVideos(elem);
+			resizeElements(vid, false);
+			addToParents(elem, overlayClass);
 		}
 	}
 });
@@ -46,7 +50,7 @@ browser.runtime.onMessage.addListener(function(msg){
 	else if(msg.resize){
 		if(debugging) console.log("Searching in Window");
 
-		var vid = findVideos();
+		var vid = findVideos(document);
 		if(vid == null){
 			if(debugging) console.log("No Videos could be found.");
 			return;
@@ -82,9 +86,6 @@ browser.runtime.onMessage.addListener(function(msg){
 
 		if(vid != null){
 			vid.classList.remove(videoClass);
-
-			// Fix Youtube offset error
-			window.dispatchEvent(new Event("resize"));
 		}
 	}
 
@@ -164,15 +165,30 @@ function restoreElements(){
 	var elems = document.querySelectorAll("."+fullscreenClass);
 	for(var i = 0; i < elems.length; i++){
 		elems[i].classList.remove(fullscreenClass);
+		elems[i].classList.remove(overlayClass);
+	}
+
+	// Fix Youtube offset error
+	window.dispatchEvent(new Event("resize"));
+}
+
+function addToParents(elem, className){
+	while(elem != null && elem.classList != undefined){
+		elem.classList.add(className);
+		elem = elem.parentNode;
 	}
 }
 
 // Add Fullscreen Classes to all Parents of Video and message top frames
-function resizeElements(elem){
+function resizeElements(elem, overlay = true){
 
 	// Resize all Parents
 	while(elem != null && elem.classList != undefined){
 		elem.classList.add(fullscreenClass);
+
+		if(overlay){
+			elem.classList.add(overlayClass);
+		}
 		elem = elem.parentNode;
 	}
 
@@ -191,17 +207,17 @@ function getFormattedSource(src){
 }
 
 // Find Videos in Website: FLASH, HTML5, EMBEDED. Flash before HTML5 for Crunchyroll
-function findVideos(){
+function findVideos(root){
 	// Search Flash Videos
-	var vid = document.querySelector("video");
+	var vid = root.querySelector("video");
 
 	// Search HTML5 Videos
 	if(vid == null){
-		vid = document.querySelector("object[type='application/x-shockwave-flash']");
+		vid = root.querySelector("object[type='application/x-shockwave-flash']");
 
 		// Search EMBEDed Videos
 		if(vid == null){
-			vid = document.querySelector("embed");
+			vid = root.querySelector("embed");
 		}
 	}
 
@@ -228,13 +244,15 @@ function createMainStyle(){
 			left: 0 !important;
 			right: 0 !important;
 			bottom: 0 !important;
-			z-Index: 2147483647 !important;
 			width: 100% !important;
 			height: 100% !important;
 			max-width: 100% !important;
 			max-height: 100% !important;
 			transform: none !important;
 			background: black !important;
+		}
+		.`+overlayClass+`{
+			z-Index: 2147483647 !important;
 		}
 		#`+controlsID+`{
 			position: fixed;
