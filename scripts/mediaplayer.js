@@ -229,8 +229,7 @@ class MediaPlayer{
                 font-size: 12px;
                 text-align: center;
                 -webkit-user-select: none;
-                line-height: `+
-                values.controlsHeight+`px;
+                line-height: `+ values.controlsHeight+`px;
                 height: `+values.controlsHeight+`px;
                 transition: height .2s;
             }
@@ -277,8 +276,6 @@ class MediaPlayer{
             .`+identifiers.sliderBarMain+`{
                 background: white;
                 height: 100%;
-                -webkit-transition: transform .5s;
-                transition: transform .5s;
                 transform-origin: 0% 50%;
                 transform: scaleX(0.3);
             }
@@ -589,8 +586,8 @@ class Button {
  *
  */
 class Slider{
-    get currOffset(){
-        return this.realWidth * (this.valueFn() / this.max);
+    get progressPercent(){
+        return this.valueFn() / this.max;
     }
     constructor(values){
         this.valueFn = values.valueFn
@@ -602,7 +599,7 @@ class Slider{
         this.slider = this.createSlider();
         this.node = this.slider.node;
         this.handle = this.node.querySelector("." + identifiers.sliderHandle);
-        this.sliderBars = this.node.querySelector("." + identifiers.sliderBars);
+        this.sliderBarMain = this.node.querySelector("." + identifiers.sliderBarMain);
     }
     setRealtime(value){
         this.realtime = value;
@@ -659,8 +656,8 @@ class Slider{
         if(this.realtime){
             this.updateValue(newValue);
         }else{
-            let tempOffset = this.realWidth * (newValue / this.max);
-            this.updateHandle(tempOffset);
+            let tempPercent = newValue / this.max;
+            this.updateHandle(tempPercent);
         }
     }
     getNewValue(e){
@@ -684,7 +681,7 @@ class Slider{
     }
     init(){ // For initial position of slider elements
         this.updateNodeValues();
-        this.updateHandle(this.currOffset);
+        this.updateHandle(this.progressPercent);
     }
     updateNodeValues(){
         let sliderSize = parseInt(Utils.getComputedStyle(this.node, "width"));
@@ -693,16 +690,19 @@ class Slider{
 
         return handleSize;
     }
-    updateHandle(offset){
-        this.handle.style.left = offset + "px";
+    updateHandle(percent){
+        this.handle.style.left = (percent * this.realWidth) + "px";
+        this.sliderBarMain.style.transform = `scaleX(${percent})`;
     }
     update(){
+        if(!this.realtime && this.dragging) return;
+
+        this.updateHandle(this.progressPercent);
+
         if(this.label != undefined){
-            let percent = (this.valueFn() * 100) / this.max;
-            this.node.setAttribute("aria-label", percent.toFixed(0) + "% " + this.label);
+            this.node.setAttribute("aria-label", (this.progressPercent * 100).toFixed(0) + "% " + this.label);
         }
 
-        this.updateHandle(this.currOffset);
     }
 }
 
