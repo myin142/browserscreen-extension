@@ -7,6 +7,7 @@ const identifiers = {
     sliderHandle: prefix + "slider-handle",
     sliderBars: prefix + "slider-bars",
     sliderBarMain: prefix + "slider-bar-main",
+    sliderBarBuffer: prefix + "slider-bar-buffer",
     volSlider: prefix + "volume-slider",
     progressSlider: prefix + "progress-slider",
 
@@ -109,6 +110,7 @@ class MediaPlayer{
         this.videoEvents.addEvent("volumechange", [volumeBtn, volumeSlider]);
         this.videoEvents.addEvent("webkitfullscreenchange", [fullscreenBtn]);
         this.videoEvents.addEvent("timeupdate", [progressBar]);
+        this.videoEvents.addEvent("progress", [progressBar.getPassiveSlider(0)]);
     }
 
     removeControls(){
@@ -192,12 +194,18 @@ class MediaPlayer{
         return slider;
     }
     createProgressBar(){
+        let bufferProgress = new PassiveSlider({
+            valueFn: () => this.getCurrentBuffer(this.video),
+            min: 0,
+            max: this.video.duration,
+        }, identifiers.sliderBarBuffer);
+
         let progress = new Slider({
             valueFn: () => this.video.currentTime,
             min: 0,
             max: this.video.duration,
             updateValue: (newValue) => this.video.currentTime = newValue
-        });
+        }, [bufferProgress]);
         progress.beforeDrag(() => {
             progress.wasPaused = this.video.paused;
             this.video.pause();
@@ -211,6 +219,23 @@ class MediaPlayer{
         progress.setRealtime(false);
 
         return progress;
+    }
+    getCurrentBuffer(video){
+        // Get Index of closest Buffer Range to current Time
+        var buffers = video.buffered;
+        var index = 0;
+        for(var i = 0; i < buffers.length; i++){
+            var bufferEnd = buffers.end(i);
+            var lastBuffer = buffers.end(index);
+            if(bufferEnd > video.currentTime){
+                if(lastBuffer <= video.currentTime || (lastBuffer > video.currentTime && bufferEnd < lastBuffer)){
+                    index = i;
+                }
+            }
+        }
+
+        // Return Buffer Time
+        return video.buffered.end(index);
     }
 
     createStyle(){
@@ -273,12 +298,6 @@ class MediaPlayer{
                 display: block;
                 background: rgba(255,255,255,0.2);
             }
-            .`+identifiers.sliderBarMain+`{
-                background: white;
-                height: 100%;
-                transform-origin: 0% 50%;
-                transform: scaleX(0.3);
-            }
             .`+identifiers.sliderBars+`, .`+identifiers.slider+`::after{
                 position: absolute;
                 height: `+values.sliderBarHeight+`px;
@@ -340,21 +359,19 @@ class MediaPlayer{
                 height: `+values.progressHeight+`px;
                 bottom: -`+(values.progressContainer - values.progressHeight)+`px;
             }
-            .`+identifiers.currProgress+`, .`+identifiers.currBuffer+`, .`+identifiers.progressBar+`::before{
+            .`+identifiers.sliderBarMain+`, .`+identifiers.sliderBarBuffer+`, .`+identifiers.progressBar+`::before{
                 height: 100%;
                 position: absolute;
                 width: 100%;
                 left: 0;
                 top: 0;
-                -webkit-transition: transform .5s;
-                transition: transform .5s;
                 transform-origin: 0% 50%;
                 transform: scaleX(0);
             }
-            .`+identifiers.currProgress+`{
+            .`+identifiers.sliderBarMain+`{
                 background: red;
             }
-            .`+identifiers.currBuffer+`{
+            .`+identifiers.sliderBarBuffer+`{
                 background: rgba(150,150,150,0.8);
             }
             .`+identifiers.progressBar+`::before{
@@ -589,13 +606,15 @@ class Slider{
     get progressPercent(){
         return this.valueFn() / this.max;
     }
-    constructor(values){
-        this.valueFn = values.valueFn
+    constructor(values, passiveSlider = []){
+        this.valueFn = values.valueFn;
         this.min = values.min;
         this.max = values.max;
         this.updateValue = values.updateValue;
         this.realtime = true;
         this.dragging = false;
+
+        this.passiveSliders = passiveSlider;
         this.slider = this.createSlider();
         this.node = this.slider.node;
         this.handle = this.node.querySelector("." + identifiers.sliderHandle);
@@ -610,6 +629,15 @@ class Slider{
     addClass(className){
         this.slider.addClass(className);
     }
+
+    getPassiveSlider(index = -1){
+        if(index < 0){
+            return this.passiveSliders;
+        }else{
+            return this.passiveSliders[index];
+        }
+    }
+
     beforeDrag(fn){
         this.beforeDrag = fn;
     }
@@ -619,11 +647,13 @@ class Slider{
     afterDrag(fn){
         this.afterDrag = fn;
     }
+
     createSlider(){
         let slider = new Container(identifiers.slider);
         let sliderHandle = new Container(identifiers.sliderHandle);
         let sliderBars = new Container(identifiers.sliderBars);
         let sliderBarMain = new Container(identifiers.sliderBarMain);
+        sliderBars.appendMultiple(this.passiveSliders);
         sliderBars.append(sliderBarMain);
         slider.appendMultiple([sliderBars, sliderHandle]);
 
@@ -682,6 +712,11 @@ class Slider{
     init(){ // For initial position of slider elements
         this.updateNodeValues();
         this.updateHandle(this.progressPercent);
+
+        // Init all passive sliders
+        this.passiveSliders.forEach(child => {
+            child.update();
+        })
     }
     updateNodeValues(){
         let sliderSize = parseInt(Utils.getComputedStyle(this.node, "width"));
@@ -703,6 +738,28 @@ class Slider{
             this.node.setAttribute("aria-label", (this.progressPercent * 100).toFixed(0) + "% " + this.label);
         }
 
+    }
+}
+
+/** @class PassiveSlider @implements {Controls, Listener}
+ *  @desc Minimal Slider Bar for @class Slider, only listening to an event
+ */
+class PassiveSlider{
+    get progressPercent(){
+        return this.valueFn() / this.max;
+    }
+    constructor(values, className = null){
+        this.slider = new Container(className);
+        this.node = this.slider.node;
+        this.updateValue = values.updateValue;
+        this.valueFn = values.valueFn;
+        this.min = values.min;
+        this.max = values.max;
+    }
+    update(){
+        console.log(this.progressPercent);
+        console.log(this.valueFn());
+        this.node.style.transform = `scaleX(${this.progressPercent})`;
     }
 }
 
