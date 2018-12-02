@@ -30,16 +30,12 @@ const identifiers = {
 
 // Values for Elements
 const values = {
-    debugging: true,
-
-    controlsHeight: 36,
     volSliderWidth: 52,
     progressHeight: 3,
     progressContainer: 16,
 
     loadingSize: 90,
 
-    idler: 0,
     rewindAmount: 10,
 
     playbackRates: [
@@ -65,6 +61,10 @@ const values = {
  *
  */
 class MediaPlayer{
+    static get debugging(){ return true; }
+    static get controlsHeight(){ return 36; }
+    static get idler(){ return 0; }
+
     constructor(video){
         this.video = video;
 
@@ -248,8 +248,8 @@ class MediaPlayer{
                 font-size: 12px;
                 text-align: center;
                 -webkit-user-select: none;
-                line-height: ${values.controlsHeight}px;
-                height: ${values.controlsHeight}px;
+                line-height: ${MediaPlayer.controlsHeight}px;
+                height: ${MediaPlayer.controlsHeight}px;
                 transition: height .2s;
             }
             .${identifiers.subContainer}{
@@ -285,7 +285,7 @@ class MediaPlayer{
             }
             .${identifiers.playSpeed} ul{
                 position: absolute;
-                bottom: ${(values.controlsHeight + values.progressContainer)}px;
+                bottom: ${(MediaPlayer.controlsHeight + values.progressContainer)}px;
                 left: 0;
                 list-style: none;
                 line-height: 25px;
@@ -811,7 +811,7 @@ class Utils{
         return dateTime;
     }
     static logger(msg){
-        if(values.debugging){
+        if(MediaPlayer.debugging){
             console.log(msg);
         }
     }
