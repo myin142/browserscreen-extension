@@ -635,13 +635,13 @@ class Slider{
             this.dragging = true;
             if(this.beforeDrag != undefined) this.beforeDrag();
 
-            realtimeUpdate(e);
+            this.realtimeUpdate(e);
         });
         document.addEventListener("mousemove", (e) => {
             if(this.dragging){
                 if(this.whileDrag != undefined) this.whileDrag();
 
-                realtimeUpdate(e);
+                this.realtimeUpdate(e);
             }
         });
         document.addEventListener("mouseup", (e) => {
@@ -660,7 +660,7 @@ class Slider{
             this.updateValue(newValue);
         }else{
             let tempOffset = this.realWidth * (newValue / this.max);
-            this.updateHandle(newValue);
+            this.updateHandle(tempOffset);
         }
     }
     getNewValue(e){
@@ -680,7 +680,6 @@ class Slider{
         }
 
         let percentage = relX / this.realWidth;
-        console.log(percentage);
         return percentage * this.max;
     }
     init(){ // For initial position of slider elements
