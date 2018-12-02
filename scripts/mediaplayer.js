@@ -48,6 +48,104 @@ const values = {
     ]
 };
 
+/** @interface Controls
+ *  @desc Implemented from all that has something to be shown in HTML
+ *
+ * @var {HTML5Element} node - Element shown in HTML
+ */
+
+/** @interface Listener
+ *  @desc Implemented from all that can listen to a video event
+ *
+ * @function update - Update Object/HTML View after Listener Event occurred
+ */
+
+/** @class VideoEvent
+ *  @desc Manages all events from a video
+ *
+ * @var {HTML5Element} video - Video where EventListener are added
+ * @var {Array[String]} events - List of all events with their funtions, used for removing events
+ *
+ * @function addEvent - Add Event to Video with list of listener updating
+ *  @param {String} event - Event for video
+ *  @param {Array[Listener]} listeners - all listeners updating on event
+ *
+ * @function addEvents - Add mutiple Events for listeners
+ *  @param {Array[String]} events
+ *  @param {Array[Listeners]} listeners
+ *
+ * @function removeAll - Remove all events from video
+ *
+ */
+class VideoEvent{
+    constructor(video){
+        this.video = video;
+        this.events = new Array();
+    }
+    addEvent(event, listeners){
+        let eventFn = function(){
+            listeners.forEach((item) => {
+                item.update();
+            });
+        }
+        this.video.addEventListener(event, eventFn);
+
+        this.events.push({ev: event, fn: eventFn});
+    }
+    addEvents(events, listeners){
+        events.forEach((item) => {
+            this.addEvent(item, listeners);
+        });
+    }
+    removeAll(){
+        this.events.forEach((item) =>{
+            this.video.removeEventListener(item.ev, item.fn);
+        });
+    }
+}
+
+/** @class Container @implements {Controls}
+ *  @desc Container for other Controls items
+ *
+ * @var {HTML5Element} node - DIV Element as Container Node
+ * @var {String} innerHTML - Direct Access to @var node.innterHTML
+ *
+ * @constructor
+ *  @param {?String} className - Init Container with class
+ *
+ * @function addClass - Add class to container
+ *  @param {String} className
+ *
+ * @function append - Append child to container
+ *  @param {Controls} child
+ *
+ * @function appendMultiple - Append array of children to container
+ *  @param {Array[Controls]} children
+ */
+class Container {
+    set innerHTML(text){
+        this.node.innerHTML = text;
+    }
+    constructor(className = null, type = null){
+        let htmlType = (type == null) ? "DIV" : type;
+        this.node = document.createElement(htmlType);
+
+        if(className != null)
+            this.addClass(className);
+    }
+    addClass(className){
+        this.node.classList.add(className);
+    }
+    append(child){
+        this.node.appendChild(child.node);
+    }
+    appendMultiple(children){
+        children.forEach((child) => {
+            this.append(child);
+        });
+    }
+}
+
 /** @class MediaPlayer
  *
  * @var {HTML5Element} video - Video Element for Controls
@@ -60,22 +158,23 @@ const values = {
  *  @return {HTML5Element} - style element for document.head
  *
  */
-class MediaPlayer{
+class MediaPlayer extends Container{
     static get debugging(){ return true; }
     static get controlsHeight(){ return 36; }
     static get idler(){ return 0; }
 
     constructor(video){
+        super(identifiers.container);
+
         this.video = video;
 
         // Create Container Layout
         let leftContainer = new Container(identifiers.leftContainer);
         let rightContainer = new Container(identifiers.rightContainer);
         let subContainer = new Container(identifiers.subContainer);
-        let container = new Container(identifiers.container);
-        container.append(subContainer);
+        this.append(subContainer);
 
-        document.body.appendChild(container.node);
+        document.body.appendChild(this.node);
         document.head.appendChild(this.createStyle());
 
         // Create Controls
@@ -434,62 +533,6 @@ class MediaPlayer{
     }
 }
 
-/** @class VideoEvent
- *  @desc Manages all events from a video
- *
- * @var {HTML5Element} video - Video where EventListener are added
- * @var {Array[String]} events - List of all events with their funtions, used for removing events
- *
- * @function addEvent - Add Event to Video with list of listener updating
- *  @param {String} event - Event for video
- *  @param {Array[Listener]} listeners - all listeners updating on event
- *
- * @function addEvents - Add mutiple Events for listeners
- *  @param {Array[String]} events
- *  @param {Array[Listeners]} listeners
- *
- * @function removeAll - Remove all events from video
- *
- */
-class VideoEvent{
-    constructor(video){
-        this.video = video;
-        this.events = new Array();
-    }
-    addEvent(event, listeners){
-        let eventFn = function(){
-            listeners.forEach((item) => {
-                item.update();
-            });
-        }
-        this.video.addEventListener(event, eventFn);
-
-        this.events.push({ev: event, fn: eventFn});
-    }
-    addEvents(events, listeners){
-        events.forEach((item) => {
-            this.addEvent(item, listeners);
-        });
-    }
-    removeAll(){
-        this.events.forEach((item) =>{
-            this.video.removeEventListener(item.ev, item.fn);
-        });
-    }
-}
-
-/** @interface Controls
- *  @desc Implemented from all that has something to be shown in HTML
- *
- * @var {HTML5Element} node - Element shown in HTML
- */
-
-/** @interface Listener
- *  @desc Implemented from all that can listen to a video event
- *
- * @function update - Update Object/HTML View after Listener Event occurred
- */
-
 /** @class Button @implements {Controls, Listener}
  *  @desc Controls Button with SVG Icon that has a condition when it is shown and an action that activates on click
  *
@@ -509,7 +552,7 @@ class VideoEvent{
  *  @param {Int} index
  *
  */
-class Button {
+class Button extends Container{
     static get buttonWidth(){ return 46; }
     static get paths(){
         return {
@@ -529,13 +572,12 @@ class Button {
         }
     }
     constructor(){
+        super(identifiers.buttons, "BUTTON");
         this.states = new Array();
         this.activeState = -1;
 
         // Create Generic Button
-        this.node = document.createElement("BUTTON");
-        this.node.classList.add(identifiers.buttons);
-        this.node.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#CCC"/></svg>';
+        this.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#CCC"/></svg>';
         this.node.addEventListener("click", () => this.states[this.activeState].action());
     }
     addState(label, condition, action){
@@ -597,7 +639,7 @@ class Button {
  * @private @function changeValue - Change Value depending on relative x inside slider
  *
  */
-class Slider{
+class Slider extends Container{
     static get sliderHandleSize(){ return 12; }
     static get sliderBarHeight(){ return 3; }
 
@@ -605,6 +647,8 @@ class Slider{
         return this.valueFn() / this.max;
     }
     constructor(values, passiveSlider = []){
+        super(identifiers.slider);
+
         this.valueFn = values.valueFn;
         this.min = values.min;
         this.max = values.max;
@@ -613,10 +657,7 @@ class Slider{
         this.dragging = false;
 
         this.passiveSliders = passiveSlider;
-        this.slider = this.createSlider();
-        this.node = this.slider.node;
-        this.handle = this.node.querySelector("." + identifiers.sliderHandle);
-        this.sliderBarMain = this.node.querySelector("." + identifiers.sliderBarMain);
+        this.createSlider();
     }
     setRealtime(value){
         this.realtime = value;
@@ -624,10 +665,6 @@ class Slider{
     setLabel(label){
         this.label = label;
     }
-    addClass(className){
-        this.slider.addClass(className);
-    }
-
     getPassiveSlider(index = -1){
         if(index < 0){
             return this.passiveSliders;
@@ -647,16 +684,14 @@ class Slider{
     }
 
     createSlider(){
-        let slider = new Container(identifiers.slider);
-        let sliderHandle = new Container(identifiers.sliderHandle);
-        let sliderBars = new Container(identifiers.sliderBars);
-        let sliderBarMain = new Container(identifiers.sliderBarMain);
-        sliderBars.appendMultiple(this.passiveSliders);
-        sliderBars.append(sliderBarMain);
-        slider.appendMultiple([sliderBars, sliderHandle]);
+        this.handle = new Container(identifiers.sliderHandle);
+        this.sliderBars = new Container(identifiers.sliderBars);
+        this.sliderBarMain = new Container(identifiers.sliderBarMain);
+        this.sliderBars.append(this.sliderBarMain);
+        this.appendMultiple([this.sliderBars, this.handle]);
 
         // Add EventListener to enable dragging slider
-        slider.node.addEventListener("mousedown", (e) => {
+        this.node.addEventListener("mousedown", (e) => {
             this.dragging = true;
             if(this.beforeDrag != undefined) this.beforeDrag();
 
@@ -676,8 +711,6 @@ class Slider{
                 if(!this.realtime) this.updateValue(this.getNewValue(e));
             }
         });
-
-        return slider;
     }
     realtimeUpdate(e){
         let newValue = this.getNewValue(e);
@@ -721,8 +754,8 @@ class Slider{
         this.realWidth = sliderSize - Slider.sliderHandleSize;
     }
     updateHandle(percent){
-        this.handle.style.left = (percent * this.realWidth) + "px";
-        this.sliderBarMain.style.transform = `scaleX(${percent})`;
+        this.handle.node.style.left = (percent * this.realWidth) + "px";
+        this.sliderBarMain.node.style.transform = `scaleX(${percent})`;
     }
     update(){
         if(!this.realtime && this.dragging) return;
@@ -753,47 +786,6 @@ class PassiveSlider{
     }
     update(){
         this.node.style.transform = `scaleX(${this.valuePercent})`;
-    }
-}
-
-/** @class Container @implements {Controls}
- *  @desc Container for other Controls items
- *
- * @var {HTML5Element} node - DIV Element as Container Node
- * @var {String} innerHTML - Direct Access to @var node.innterHTML
- *
- * @constructor
- *  @param {?String} className - Init Container with class
- *
- * @function addClass - Add class to container
- *  @param {String} className
- *
- * @function append - Append child to container
- *  @param {Controls} child
- *
- * @function appendMultiple - Append array of children to container
- *  @param {Array[Controls]} children
- */
-class Container {
-    set innerHTML(text){
-        this.node.innerHTML = text;
-    }
-    constructor(className = null){
-        this.node = document.createElement("DIV");
-
-        if(className != null)
-            this.addClass(className);
-    }
-    addClass(className){
-        this.node.classList.add(className);
-    }
-    append(child){
-        this.node.appendChild(child.node);
-    }
-    appendMultiple(children){
-        children.forEach((child) => {
-            this.append(child);
-        });
     }
 }
 
