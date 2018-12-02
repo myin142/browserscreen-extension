@@ -1,4 +1,4 @@
-// Classes and Ids for Elements
+${${${${${// Classes and Ids for Elements
 const prefix = "browserscreen-";
 const identifiers = {
     style: prefix + "videoControlsStyle",
@@ -238,7 +238,7 @@ class MediaPlayer{
             video::-webkit-media-controls-enclosure{
                 display: none !important;
             }
-            .`+identifiers.container+`{
+            .${identifiers.container}{
                 position: fixed;
                 bottom: 0;
                 left: 0;
@@ -249,11 +249,11 @@ class MediaPlayer{
                 font-size: 12px;
                 text-align: center;
                 -webkit-user-select: none;
-                line-height: `+ values.controlsHeight+`px;
-                height: `+values.controlsHeight+`px;
+                line-height: ${values.controlsHeight}px;
+                height: ${values.controlsHeight}px;
                 transition: height .2s;
             }
-            .`+identifiers.subContainer+`{
+            .${identifiers.subContainer}{
                 height: 100%;
                 display: inline-flex;
                 justify-content: space-between;
@@ -262,79 +262,79 @@ class MediaPlayer{
                 color: #CCC;
                 background: rgba(0,0,0,0.6);
             }
-            .`+identifiers.leftContainer+`, .`+identifiers.rightContainer+`{
+            .${identifiers.leftContainer}, .${identifiers.rightContainer}{
                 display: inline-flex;
             }
-            .`+identifiers.buttons+`, .`+identifiers.playSpeed+`, .`+identifiers.playSpeed+` ul{
+            .${identifiers.buttons}, .${identifiers.playSpeed}, .${identifiers.playSpeed} ul{
                 border: none !important;
                 background: none !important;
                 cursor: pointer;
                 outline: 0;
-                width: `+values.buttonWidth+`px;
+                width: ${values.buttonWidth}px;
                 padding: 0 !important;
                 margin: 0;
                 position: relative;
             }
-            .`+identifiers.buttons+`:hover path{
+            .${identifiers.buttons}:hover path{
                 fill: white;
             }
-            .`+identifiers.volSlider+`.`+identifiers.slider+`{
-                /*width: `+values.volSliderWidth+`px;*/
+            .${identifiers.volSlider}.${identifiers.slider}{
+                /*width: ${values.volSliderWidth}px;*/
             }
-            .`+identifiers.slider+`{
+            .${identifiers.slider}{
                 display: inline-block;
                 position: relative;
                 height: 100%;
                 width: 100%;
                 cursor: pointer;
             }
-            .`+identifiers.slider+`::after{
+            .${identifiers.slider}::after{
                 content: '';
                 display: block;
                 background: rgba(255,255,255,0.2);
             }
-            .`+identifiers.sliderBars+`, .`+identifiers.slider+`::after{
+            .${identifiers.sliderBars}, .${identifiers.slider}::after{
                 position: absolute;
-                height: `+values.sliderBarHeight+`px;
-                margin-top: -`+(values.sliderBarHeight-1)+`px;
+                height: ${values.sliderBarHeight}px;
+                margin-top: -${(values.sliderBarHeight-1)}px;
                 width: 100%;
                 top: 50%;
             }
-            .`+identifiers.sliderHandle+`{
+            .${identifiers.sliderHandle}{
                 position: absolute;
                 top: 50%;
-                width: `+values.sliderHandleSize+`px;
-                height: `+values.sliderHandleSize+`px;
-                border-radius: `+(values.sliderHandleSize/2)+`px;
-                margin-top: -`+(values.sliderHandleSize/2)+`px;
+                width: ${values.sliderHandleSize}px;
+                height: ${values.sliderHandleSize}px;
+                border-radius: ${(values.sliderHandleSize/2)}px;
+                margin-top: -${(values.sliderHandleSize/2)}px;
                 background: white;
             }
-            .`+identifiers.timeDisplay+`, .`+identifiers.qualityLabel+`{
+            .${identifiers.timeDisplay}, .${identifiers.qualityLabel}{
                 padding: 0 0.7em;
                 max-width: 200px;
             }
-            .`+identifiers.playSpeed+` ul{
+            .${identifiers.playSpeed} ul{
                 position: absolute;
-                bottom: `+(values.controlsHeight + values.progressContainer)+`px;
+                bottom: ${(values.controlsHeight + values.progressContainer)}px;
                 left: 0;
                 list-style: none;
                 line-height: 25px;
                 display: none;
                 background: rgba(0,0,0,0.6) !important;
             }
-            .`+identifiers.playSpeed+` li:hover{
+            .${identifiers.playSpeed} li:hover{
                 background: rgba(60,60,60,0.8);
             }
-            .`+identifiers.playSpeed+` span{
+            .${identifiers.playSpeed} span{
                 display: block;
             }
-            .`+identifiers.playSpeed+` span:hover{
+            .${identifiers.playSpeed} span:hover{
                 color: white;
             }
-            .`+identifiers.progressHover+`:hover .`+identifiers.previewTime+`{
+            .${identifiers.progressHover}:hover .${identifiers.previewTime}{
                 display: block;
             }
-            .`+identifiers.sliderBarMain+`, .`+identifiers.sliderBarBuffer+`{
+            .${identifiers.sliderBarMain}, .${identifiers.sliderBarBuffer}{
                 height: 100%;
                 position: absolute;
                 width: 100%;
@@ -343,13 +343,13 @@ class MediaPlayer{
                 transform-origin: 0% 50%;
                 transform: scaleX(0);
             }
-            .`+identifiers.sliderBarMain+`{
+            .${identifiers.sliderBarMain}{
                 background: red;
             }
-            .`+identifiers.sliderBarBuffer+`{
+            .${identifiers.sliderBarBuffer}{
                 background: rgba(150,150,150,0.8);
             }
-            .`+identifiers.previewTime+`{
+            .${identifiers.previewTime}{
                 position: absolute;
                 background: rgba(80,80,80,0.7);
                 height: 12px;
@@ -358,23 +358,23 @@ class MediaPlayer{
                 top: -20px;
                 display: none;
             }
-            .`+identifiers.loading+`{
+            .${identifiers.loading}{
                 position: fixed;
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                width: `+values.loadingSize+`px;
-                height: `+values.loadingSize+`px;
+                width: ${values.loadingSize}px;
+                height: ${values.loadingSize}px;
                 border-radius: 50%;
             }
-            .`+identifiers.loading+` .circular{
+            .${identifiers.loading} .circular{
               animation: rotate 2s linear infinite;
               height: 100%;
               transform-origin: center center;
               width: 100%;
               margin: auto;
             }
-            .`+identifiers.loading+` .path{
+            .${identifiers.loading} .path{
               stroke-dasharray: 1, 200;
               stroke-dashoffset: 0;
               animation: dash 1.5s ease-in-out infinite;
