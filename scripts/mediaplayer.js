@@ -214,11 +214,11 @@ class MediaPlayer{
     }
     getCurrentBuffer(video){
         // Get Index of closest Buffer Range to current Time
-        var buffers = video.buffered;
-        var index = 0;
-        for(var i = 0; i < buffers.length; i++){
-            var bufferEnd = buffers.end(i);
-            var lastBuffer = buffers.end(index);
+        let buffers = video.buffered;
+        let index = 0;
+        for(let i = 0; i < buffers.length; i++){
+            let bufferEnd = buffers.end(i);
+            let lastBuffer = buffers.end(index);
             if(bufferEnd > video.currentTime){
                 if(lastBuffer <= video.currentTime || (lastBuffer > video.currentTime && bufferEnd < lastBuffer)){
                     index = i;
@@ -800,15 +800,18 @@ class Container {
 class Utils{
     static normalizeTime(time){
         // Convert Time to Minutes and Seconds
-        var hours = Math.floor(time / 3600);
-        var minutes = Math.floor((time - hours * 3600) / 60);
-        var seconds = Math.floor(time - (minutes * 60) - (hours * 3600));
-        hours = prependTime(hours);
-        minutes = prependTime(minutes);
-        seconds = prependTime(seconds);
-        var dateTime = ((hours != "00") ? hours + ":" : "") + minutes + ":" + seconds;
+        let hours = Math.floor(time / 3600);
+        let minutes = Math.floor((time - hours * 3600) / 60);
+        let seconds = Math.floor(time - (minutes * 60) - (hours * 3600));
+        hours = this.prependTime(hours);
+        minutes = this.prependTime(minutes);
+        seconds = this.prependTime(seconds);
+        let dateTime = ((hours != "00") ? hours + ":" : "") + minutes + ":" + seconds;
 
         return dateTime;
+    }
+    static prependTime(time){
+        return (time < 10) ? "0" + time : time;
     }
     static logger(msg){
         if(MediaPlayer.debugging){
@@ -816,19 +819,19 @@ class Utils{
         }
     }
     static isPointer(){
-        var hovers = document.querySelector(":hover");
+        let hovers = document.querySelector(":hover");
         if(hovers == null){
             this.logger("No Hover Element");
             return false;
         }
 
-        var innerHover;
+        let innerHover;
         while(hovers){
             innerHover = hovers;
             hovers = innerHover.querySelector(":hover");
         }
 
-        var pointer = window.getComputedStyle(innerHover).cursor == "pointer";
+        let pointer = window.getComputedStyle(innerHover).cursor == "pointer";
         this.logger("Is Pointer: " + pointer);
         return pointer;
     }
@@ -1037,9 +1040,6 @@ function MediaControls(video, prefix){
         var sep = document.createElement("SPAN");
         sep.innerHTML = " / ";
         return sep;
-    }
-    function prependTime(time){
-        return (time < 10) ? "0" + time : time;
     }
 
     // Create UI Elements of Left Container
