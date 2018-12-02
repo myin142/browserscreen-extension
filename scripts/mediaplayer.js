@@ -1,4 +1,4 @@
-${${${${${// Classes and Ids for Elements
+// Classes and Ids for Elements
 const prefix = "browserscreen-";
 const identifiers = {
     style: prefix + "videoControlsStyle",
