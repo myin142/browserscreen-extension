@@ -316,6 +316,20 @@ class MediaPlayer{
                 right: 0;
                 height: ${values.progressContainer}px !important;
             }
+            .${identifiers.progressSlider}:hover{
+                position: absolute !important;
+                top: -${(Slider.sliderBarHeight + values.progressContainer) / 2}px;
+                left: 0;
+                right: 0;
+                height: ${values.progressContainer}px !important;
+            }
+            .${identifiers.progressSlider} .${identifiers.sliderHandle}{
+                transform: scale(0);
+                background: red;
+            }
+            .${identifiers.progressSlider}:hover .${identifiers.sliderHandle}, .${identifiers.progressSlider}:focus .${identifiers.sliderHandle}{
+                transform: scale(1);
+            }
             .${identifiers.volSlider} .${identifiers.sliderBarMain}, .${identifiers.playSpeed} span:hover{
                 background: white;
             }
@@ -348,6 +362,8 @@ class MediaPlayer{
                 border-radius: ${Slider.sliderHandleSize / 2}px;
                 margin-top: -${Slider.sliderHandleSize / 2}px;
                 background: white;
+                transform-origin: 50% 50%;
+                transition: transform 0.1s ease-out;
             }
             .${identifiers.sliderBarMain}, .${identifiers.sliderBarBuffer}{
                 height: 100%;
