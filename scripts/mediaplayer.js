@@ -278,8 +278,8 @@ class MediaPlayer{
             .${identifiers.buttons}:hover path{
                 fill: white;
             }
-            .${identifiers.volSlider}.${identifiers.slider}{
-                /*width: ${values.volSliderWidth}px;*/
+            .${identifiers.volSlider} .${identifiers.sliderBarMain}{
+                background: white;
             }
             .${identifiers.slider}{
                 display: inline-block;
