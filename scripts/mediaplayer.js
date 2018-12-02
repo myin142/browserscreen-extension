@@ -33,10 +33,7 @@ const values = {
     debugging: true,
 
     controlsHeight: 36,
-    buttonWidth: 46,
     volSliderWidth: 52,
-    sliderHandleSize: 12,
-    sliderBarHeight: 3,
     progressHeight: 3,
     progressContainer: 16,
 
@@ -274,7 +271,7 @@ class MediaPlayer{
                 background: none !important;
                 cursor: pointer;
                 outline: 0;
-                width: ${values.buttonWidth}px;
+                width: ${Button.buttonWidth}px;
                 padding: 0 !important;
                 margin: 0;
                 position: relative;
@@ -314,7 +311,7 @@ class MediaPlayer{
             /* Slider Styles */
             .${identifiers.progressSlider}{
                 position: absolute !important;
-                top: -${(values.sliderBarHeight + values.progressContainer) / 2}px;
+                top: -${(Slider.sliderBarHeight + values.progressContainer) / 2}px;
                 left: 0;
                 right: 0;
                 height: ${values.progressContainer}px !important;
@@ -338,18 +335,18 @@ class MediaPlayer{
             }
             .${identifiers.sliderBars}, .${identifiers.slider}::after{
                 position: absolute;
-                height: ${values.sliderBarHeight}px;
-                margin-top: -${(values.sliderBarHeight-1)}px;
+                height: ${Slider.sliderBarHeight}px;
+                margin-top: -${Slider.sliderBarHeight - 1}px;
                 width: 100%;
                 top: 50%;
             }
             .${identifiers.sliderHandle}{
                 position: absolute;
                 top: 50%;
-                width: ${values.sliderHandleSize}px;
-                height: ${values.sliderHandleSize}px;
-                border-radius: ${(values.sliderHandleSize/2)}px;
-                margin-top: -${(values.sliderHandleSize/2)}px;
+                width: ${Slider.sliderHandleSize}px;
+                height: ${Slider.sliderHandleSize}px;
+                border-radius: ${Slider.sliderHandleSize / 2}px;
+                margin-top: -${Slider.sliderHandleSize / 2}px;
                 background: white;
             }
             .${identifiers.sliderBarMain}, .${identifiers.sliderBarBuffer}{
@@ -497,6 +494,7 @@ class VideoEvent{
  *
  */
 class Button {
+    static get buttonWidth(){ return 46; }
     static get paths(){
         return {
             play: "M 12,26 12,10 25,18 Z",
@@ -585,6 +583,9 @@ class Button {
  */
 class Slider{
     get progressPercent(){
+    static get sliderHandleSize(){ return 12; }
+    static get sliderBarHeight(){ return 3; }
+
         return this.valueFn() / this.max;
     }
     constructor(values, passiveSlider = []){
@@ -672,7 +673,7 @@ class Slider{
         }
     }
     getNewValue(e){
-        let handleSize = this.updateNodeValues();
+        let handleSize = Slider.sliderHandleSize;
 
         // Has to be called everytime, because window can be resized
         this.sliderL = this.node.getBoundingClientRect().left + handleSize/2;
@@ -701,10 +702,7 @@ class Slider{
     }
     updateNodeValues(){
         let sliderSize = parseInt(Utils.getComputedStyle(this.node, "width"));
-        let handleSize = parseInt(Utils.getComputedStyle(this.handle, "width"));
-        this.realWidth = sliderSize - handleSize;
-
-        return handleSize;
+        this.realWidth = sliderSize - Slider.sliderHandleSize;
     }
     updateHandle(percent){
         this.handle.style.left = (percent * this.realWidth) + "px";
