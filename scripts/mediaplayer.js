@@ -238,6 +238,8 @@ class MediaPlayer{
             video::-webkit-media-controls-enclosure{
                 display: none !important;
             }
+
+            /* Container Styles */
             .${identifiers.container}{
                 position: fixed;
                 bottom: 0;
@@ -265,6 +267,8 @@ class MediaPlayer{
             .${identifiers.leftContainer}, .${identifiers.rightContainer}{
                 display: inline-flex;
             }
+
+            /* Button Styles */
             .${identifiers.buttons}, .${identifiers.playSpeed}, .${identifiers.playSpeed} ul{
                 border: none !important;
                 background: none !important;
@@ -278,14 +282,53 @@ class MediaPlayer{
             .${identifiers.buttons}:hover path{
                 fill: white;
             }
-            .${identifiers.volSlider} .${identifiers.sliderBarMain}{
+            .${identifiers.timeDisplay}, .${identifiers.qualityLabel}{
+                padding: 0 0.7em;
+                max-width: 200px;
+            }
+            .${identifiers.playSpeed} ul{
+                position: absolute;
+                bottom: ${(values.controlsHeight + values.progressContainer)}px;
+                left: 0;
+                list-style: none;
+                line-height: 25px;
+                display: none;
+                background: rgba(0,0,0,0.6) !important;
+            }
+            .${identifiers.playSpeed} li:hover{
+                background: rgba(60,60,60,0.8);
+            }
+            .${identifiers.playSpeed} span{
+                display: block;
+            }
+            .${identifiers.previewTime}{
+                position: absolute;
+                background: rgba(80,80,80,0.7);
+                height: 12px;
+                padding: 0.4em;
+                line-height: 12px;
+                top: -20px;
+                display: none;
+            }
+
+            /* Slider Styles */
+            .${identifiers.progressSlider}{
+                position: absolute !important;
+                top: -${(values.sliderBarHeight + values.progressContainer) / 2}px;
+                left: 0;
+                right: 0;
+                height: ${values.progressContainer}px !important;
+            }
+            .${identifiers.volSlider} .${identifiers.sliderBarMain}, .${identifiers.playSpeed} span:hover{
                 background: white;
+            }
+            .${identifiers.volSlider}{
+                width: ${values.volSliderWidth}px;
             }
             .${identifiers.slider}{
                 display: inline-block;
                 position: relative;
                 height: 100%;
-                width: 100%;
                 cursor: pointer;
             }
             .${identifiers.slider}::after{
@@ -309,31 +352,6 @@ class MediaPlayer{
                 margin-top: -${(values.sliderHandleSize/2)}px;
                 background: white;
             }
-            .${identifiers.timeDisplay}, .${identifiers.qualityLabel}{
-                padding: 0 0.7em;
-                max-width: 200px;
-            }
-            .${identifiers.playSpeed} ul{
-                position: absolute;
-                bottom: ${(values.controlsHeight + values.progressContainer)}px;
-                left: 0;
-                list-style: none;
-                line-height: 25px;
-                display: none;
-                background: rgba(0,0,0,0.6) !important;
-            }
-            .${identifiers.playSpeed} li:hover{
-                background: rgba(60,60,60,0.8);
-            }
-            .${identifiers.playSpeed} span{
-                display: block;
-            }
-            .${identifiers.playSpeed} span:hover{
-                color: white;
-            }
-            .${identifiers.progressHover}:hover .${identifiers.previewTime}{
-                display: block;
-            }
             .${identifiers.sliderBarMain}, .${identifiers.sliderBarBuffer}{
                 height: 100%;
                 position: absolute;
@@ -349,15 +367,8 @@ class MediaPlayer{
             .${identifiers.sliderBarBuffer}{
                 background: rgba(150,150,150,0.8);
             }
-            .${identifiers.previewTime}{
-                position: absolute;
-                background: rgba(80,80,80,0.7);
-                height: 12px;
-                padding: 0.4em;
-                line-height: 12px;
-                top: -20px;
-                display: none;
-            }
+
+            /* Loading Styles */
             .${identifiers.loading}{
                 position: fixed;
                 top: 50%;
