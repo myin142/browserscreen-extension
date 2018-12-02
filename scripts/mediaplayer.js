@@ -582,10 +582,10 @@ class Button {
  *
  */
 class Slider{
-    get progressPercent(){
     static get sliderHandleSize(){ return 12; }
     static get sliderBarHeight(){ return 3; }
 
+    get valuePercent(){
         return this.valueFn() / this.max;
     }
     constructor(values, passiveSlider = []){
@@ -693,7 +693,7 @@ class Slider{
     }
     init(){ // For initial position of slider elements
         this.updateNodeValues();
-        this.updateHandle(this.progressPercent);
+        this.updateHandle(this.valuePercent);
 
         // Init all passive sliders
         this.passiveSliders.forEach(child => {
@@ -711,10 +711,10 @@ class Slider{
     update(){
         if(!this.realtime && this.dragging) return;
 
-        this.updateHandle(this.progressPercent);
+        this.updateHandle(this.valuePercent);
 
         if(this.label != undefined){
-            this.node.setAttribute("aria-label", (this.progressPercent * 100).toFixed(0) + "% " + this.label);
+            this.node.setAttribute("aria-label", (this.valuePercent * 100).toFixed(0) + "% " + this.label);
         }
 
     }
@@ -724,7 +724,7 @@ class Slider{
  *  @desc Minimal Slider Bar for @class Slider, only listening to an event
  */
 class PassiveSlider{
-    get progressPercent(){
+    get valuePercent(){
         return this.valueFn() / this.max;
     }
     constructor(values, className = null){
@@ -736,9 +736,7 @@ class PassiveSlider{
         this.max = values.max;
     }
     update(){
-        console.log(this.progressPercent);
-        console.log(this.valueFn());
-        this.node.style.transform = `scaleX(${this.progressPercent})`;
+        this.node.style.transform = `scaleX(${this.valuePercent})`;
     }
 }
 
