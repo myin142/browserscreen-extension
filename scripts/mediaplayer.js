@@ -23,11 +23,6 @@ const identifiers = {
     leftContainer: prefix + "controls-leftContainer",
     rightContainer: prefix + "controls-rightContainer",
 
-    progressBar: prefix + "progress-bar",
-    progressContainer: prefix + "progress-bar-container",
-    progessHover: prefix + "progress-bar-hover",
-    currProgress: prefix + "curr-progress-bar",
-    currBuffer: prefix + "curr-buffered-bar",
     previewTime: prefix + "progress-bar-time",
 
     loading: prefix + "loading-icon"
@@ -336,30 +331,10 @@ class MediaPlayer{
             .`+identifiers.playSpeed+` span:hover{
                 color: white;
             }
-            .`+identifiers.progressSlider+`{
-                /*float: left;
-                width: 100%;
-                top: -`+values.progressContainer+`px;
-                height: `+values.progressContainer+`px;*/
-            }
-            .`+identifiers.progressContainer+`{
-                position: absolute;
-            }
-            .`+identifiers.progressHover+`:hover .`+identifiers.progressBar+`{
-                bottom: -`+(values.progressContainer - (values.progressHeight * 2))+`px;
-            }
-            .`+identifiers.progressHover+`:hover .`+identifiers.progressBar+` *:not(.`+identifiers.previewTime+`), .`+identifiers.progressContainer+`:hover .`+identifiers.progressBar+`::before{
-                height: `+(values.progressHeight * 2)+`px;
-            }
             .`+identifiers.progressHover+`:hover .`+identifiers.previewTime+`{
                 display: block;
             }
-            .`+identifiers.progressBar+`{
-                position: relative;
-                height: `+values.progressHeight+`px;
-                bottom: -`+(values.progressContainer - values.progressHeight)+`px;
-            }
-            .`+identifiers.sliderBarMain+`, .`+identifiers.sliderBarBuffer+`, .`+identifiers.progressBar+`::before{
+            .`+identifiers.sliderBarMain+`, .`+identifiers.sliderBarBuffer+`{
                 height: 100%;
                 position: absolute;
                 width: 100%;
@@ -373,11 +348,6 @@ class MediaPlayer{
             }
             .`+identifiers.sliderBarBuffer+`{
                 background: rgba(150,150,150,0.8);
-            }
-            .`+identifiers.progressBar+`::before{
-                content: '';
-                background: rgba(90,90,90,0.5);
-                transform: scaleX(1);
             }
             .`+identifiers.previewTime+`{
                 position: absolute;
