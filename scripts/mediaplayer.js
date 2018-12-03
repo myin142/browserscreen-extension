@@ -117,9 +117,8 @@ class Container {
     set innerHTML(text){
         this.node.innerHTML = text;
     }
-    constructor(className = null, type = null){
-        let htmlType = (type == null) ? "DIV" : type;
-        this.node = document.createElement(htmlType);
+    constructor(className = null, type = "DIV"){
+        this.node = document.createElement(type);
 
         if(className != null)
             this.addClass(className);
