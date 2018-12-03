@@ -735,7 +735,7 @@ class ProgressBar extends Slider{
             video.pause();
         });
         this.afterDrag(() => {
-            if(!progress.wasPaused)
+            if(!this.wasPaused)
                 video.play();
         });
         this.setLabel("Video Progress");
