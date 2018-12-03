@@ -183,8 +183,8 @@ class MediaPlayer extends Container{
         let forwardBtn = this.createForwardButton();
         let rewindBtn = this.createRewindButton();
         let fullscreenBtn = this.createFullscreenButton();
-        let volumeSlider = this.createVolumeSlider();
-        let progressBar = this.createProgressBar();
+        let volumeSlider = new VolumeSlider(video);
+        let progressBar = new ProgressBar(video);
 
         // Add Controls to Containers
         leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider]);
@@ -201,7 +201,7 @@ class MediaPlayer extends Container{
         this.videoEvents.addEvent("volumechange", [volumeBtn, volumeSlider]);
         this.videoEvents.addEvent("webkitfullscreenchange", [fullscreenBtn]);
         this.videoEvents.addEvent("timeupdate", [progressBar]);
-        this.videoEvents.addEvent("progress", [progressBar.getPassiveSlider(0)]);
+        this.videoEvents.addEvent("progress", [progressBar.bufferProgress]);
     }
 
     removeControls(){
@@ -267,66 +267,6 @@ class MediaPlayer extends Container{
             btn.addState(item.name, item.condition, item.action);
         });
         return btn;
-    }
-
-    createVolumeSlider(){
-        let slider = new Slider({
-            valueFn: () => this.video.volume,
-            min: 0,
-            max: 1,
-            updateValue: (newValue) => this.video.volume = newValue
-        });
-        slider.whileDrag(() => {
-            if(this.video.volume > 0) this.video.muted = false;
-            if(this.video.volume == 0) this.video.muted = true;
-        });
-        slider.setLabel("Volume");
-        slider.addClass(identifiers.volSlider);
-        return slider;
-    }
-    createProgressBar(){
-        let bufferProgress = new PassiveSlider({
-            valueFn: () => this.getCurrentBuffer(this.video),
-            min: 0,
-            max: this.video.duration,
-        }, identifiers.sliderBarBuffer);
-
-        let progress = new Slider({
-            valueFn: () => this.video.currentTime,
-            min: 0,
-            max: this.video.duration,
-            updateValue: (newValue) => this.video.currentTime = newValue
-        }, [bufferProgress]);
-        progress.beforeDrag(() => {
-            progress.wasPaused = this.video.paused;
-            this.video.pause();
-        });
-        progress.afterDrag(() => {
-            if(!progress.wasPaused)
-                this.video.play();
-        });
-        progress.setLabel("Video Progress");
-        progress.addClass(identifiers.progressSlider);
-        progress.setRealtime(false);
-
-        return progress;
-    }
-    getCurrentBuffer(video){
-        // Get Index of closest Buffer Range to current Time
-        let buffers = video.buffered;
-        let index = 0;
-        for(let i = 0; i < buffers.length; i++){
-            let bufferEnd = buffers.end(i);
-            let lastBuffer = buffers.end(index);
-            if(bufferEnd > video.currentTime){
-                if(lastBuffer <= video.currentTime || (lastBuffer > video.currentTime && bufferEnd < lastBuffer)){
-                    index = i;
-                }
-            }
-        }
-
-        // Return Buffer Time
-        return video.buffered.end(index);
     }
 
     createStyle(){
@@ -478,6 +418,7 @@ class MediaPlayer extends Container{
             }
             .${identifiers.sliderBarBuffer}{
                 background: rgba(150,150,150,0.8);
+                z-index: -1;
             }
 
             /* Loading Styles */
@@ -646,7 +587,7 @@ class Slider extends Container{
     get valuePercent(){
         return this.valueFn() / this.max;
     }
-    constructor(values, passiveSlider = []){
+    constructor(values){
         super(identifiers.slider);
 
         this.valueFn = values.valueFn;
@@ -656,7 +597,6 @@ class Slider extends Container{
         this.realtime = true;
         this.dragging = false;
 
-        this.passiveSliders = passiveSlider;
         this.createSlider();
     }
     setRealtime(value){
@@ -664,13 +604,6 @@ class Slider extends Container{
     }
     setLabel(label){
         this.label = label;
-    }
-    getPassiveSlider(index = -1){
-        if(index < 0){
-            return this.passiveSliders;
-        }else{
-            return this.passiveSliders[index];
-        }
     }
 
     beforeDrag(fn){
@@ -743,11 +676,6 @@ class Slider extends Container{
     init(){ // For initial position of slider elements
         this.updateNodeValues();
         this.updateHandle(this.valuePercent);
-
-        // Init all passive sliders
-        this.passiveSliders.forEach(child => {
-            child.update();
-        })
     }
     updateNodeValues(){
         let sliderSize = parseInt(Utils.getComputedStyle(this.node, "width"));
@@ -769,16 +697,87 @@ class Slider extends Container{
     }
 }
 
+class ProgressBar extends Slider{
+    constructor(video){
+        let values = {
+            valueFn: () => video.currentTime,
+            min: 0,
+            max: video.duration,
+            updateValue: (newValue) => video.currentTime = newValue,
+        };
+        super(values);
+
+        this.beforeDrag(() => {
+            this.wasPaused = video.paused;
+            video.pause();
+        });
+        this.afterDrag(() => {
+            if(!progress.wasPaused)
+                video.play();
+        });
+        this.setLabel("Video Progress");
+        this.addClass(identifiers.progressSlider);
+        this.setRealtime(false);
+
+        this.bufferProgress = new PassiveSlider({
+            valueFn: () => this.getCurrentBuffer(video),
+            min: 0,
+            max: video.duration,
+        }, identifiers.sliderBarBuffer);
+        this.sliderBars.append(this.bufferProgress);
+        this.bufferProgress.update();
+    }
+    getCurrentBuffer(video){
+        // Get Index of closest Buffer Range to current Time
+        let buffers = video.buffered;
+        let index = 0;
+        for(let i = 0; i < buffers.length; i++){
+            let bufferEnd = buffers.end(i);
+            let lastBuffer = buffers.end(index);
+            if(bufferEnd > video.currentTime){
+                if(lastBuffer <= video.currentTime || (lastBuffer > video.currentTime && bufferEnd < lastBuffer)){
+                    index = i;
+                }
+            }
+        }
+
+        // Return Buffer Time
+        return video.buffered.end(index);
+    }
+}
+
+class VolumeSlider extends Slider{
+    constructor(video){
+        let values = {
+            valueFn: () => video.volume,
+            min: 0,
+            max: 1,
+            updateValue: (newValue) => video.volume = newValue
+        };
+        super(values);
+        
+        this.whileDrag(() => {
+            if(video.volume > 0) video.muted = false;
+            if(video.volume == 0) video.muted = true;
+        });
+        this.afterDrag(() => {
+            if(video.volume > 0) video.muted = false;
+            if(video.volume == 0) video.muted = true;
+        });
+        this.setLabel("Volume");
+        this.addClass(identifiers.volSlider);
+    }
+}
+
 /** @class PassiveSlider @implements {Controls, Listener}
  *  @desc Minimal Slider Bar for @class Slider, only listening to an event
  */
-class PassiveSlider{
+class PassiveSlider extends Container{
     get valuePercent(){
         return this.valueFn() / this.max;
     }
     constructor(values, className = null){
-        this.slider = new Container(className);
-        this.node = this.slider.node;
+        super(className);
         this.updateValue = values.updateValue;
         this.valueFn = values.valueFn;
         this.min = values.min;
