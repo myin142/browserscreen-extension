@@ -25,11 +25,6 @@ const identifiers = {
     loading: prefix + "loading-icon"
 };
 
-// Values for Elements
-const values = {
-    loadingSize: 90,
-};
-
 /** @interface Controls
  *  @desc Implemented from all that has something to be shown in HTML
  *
@@ -67,7 +62,7 @@ class VideoEvent{
     addEvent(event, listeners){
         let eventFn = function(){
             listeners.forEach((item) => {
-                item.update();
+                item.update(event);
             });
         }
         this.video.addEventListener(event, eventFn);
@@ -154,7 +149,6 @@ class MediaPlayer extends Container{
         let leftContainer = new Container(identifiers.leftContainer);
         let rightContainer = new Container(identifiers.rightContainer);
         let subContainer = new Container(identifiers.subContainer);
-        this.append(subContainer);
 
         document.body.appendChild(this.node);
         document.head.appendChild(this.createStyle());
@@ -171,11 +165,13 @@ class MediaPlayer extends Container{
         let timeLabel = this.createTimeLabel();
         let qualityLabel = this.createQualityLabel();
         let playrateMenu = this.createPlayRateDropdown();
+        let loadingIcon = new Loading();
 
         // Add Controls to Containers
         leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider, timeLabel]);
         rightContainer.appendMultiple([qualityLabel, playrateMenu, fullscreenBtn]);
         subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
+        this.appendMultiple([subContainer, loadingIcon]);
 
         [volumeSlider, progressBar].forEach((item) => {
             item.init();
@@ -190,6 +186,7 @@ class MediaPlayer extends Container{
         this.videoEvents.addEvent("progress", [progressBar.bufferProgress]);
         this.videoEvents.addEvent("loadedmetadata", [qualityLabel]);
         this.videoEvents.addEvent("ratechange", [playrateMenu.currentLabel]);
+        this.videoEvents.addEvents(["waiting", "playing"], [loadingIcon]);
     }
 
     removeControls(){
@@ -435,8 +432,8 @@ class MediaPlayer extends Container{
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                width: ${values.loadingSize}px;
-                height: ${values.loadingSize}px;
+                width: ${Loading.loadingSize}px;
+                height: ${Loading.loadingSize}px;
                 border-radius: 50%;
             }
             .${identifiers.loading} .circular{
@@ -849,6 +846,25 @@ class VolumeSlider extends Slider{
         });
         this.setLabel("Volume");
         this.addClass(identifiers.volSlider);
+    }
+}
+
+/** @class Loading @extends {Container} @implements {Listener}
+ *  @desc Animated Loading Icon
+ */
+class Loading extends Container{
+    static get loadingSize(){ return 90; }
+    constructor(){
+        super(identifiers.loading);
+        this.innerHTML = "<svg class='circular' viewBox='25 25 50 50'><circle class='path' cx='50' cy='50' r='20' fill='none' stroke-width='3' stroke-miterlimit='10'/></svg>";
+        this.toggle(0);
+    }
+    toggle(show){
+        this.node.style.display = (show) ? "block" : "none";
+    }
+
+    update(eventName){
+        this.toggle(eventName == "waiting");
     }
 }
 
