@@ -122,7 +122,7 @@ browser.runtime.onMessage.addListener(function(msg){
 });
 
 function createControls(video){
-    mControls = new MediaPlayer(video, "browserscreen");
+    mControls = new MediaPlayer(video);
 }
 
 function removeControls(){
