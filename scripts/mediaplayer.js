@@ -29,8 +29,6 @@ const identifiers = {
 const values = {
     loadingSize: 90,
 
-    rewindAmount: 10,
-
     playbackRates: [
         0.25,
         0.5,
@@ -152,6 +150,7 @@ class Container {
  *
  */
 class MediaPlayer extends Container{
+    static get rewindAmount(){return 10; }
     static get debugging(){ return true; }
     static get controlsHeight(){ return 36; }
     static get idler(){ return 0; }
@@ -224,12 +223,12 @@ class MediaPlayer extends Container{
     }
     createRewindButton(){
         return this.createButton([
-            {name: "rewind", condition: () => true, action: () => this.video.currentTime -= values.rewindAmount}
+            {name: "rewind", condition: () => true, action: () => this.video.currentTime -= MediaPlayer.rewindAmount}
         ]);
     }
     createForwardButton(){
         return this.createButton([
-            {name: "fastForward", condition: () => true, action: () => this.video.currentTime += values.rewindAmount}
+            {name: "fastForward", condition: () => true, action: () => this.video.currentTime += MediaPlayer.rewindAmount}
         ]);
     }
     createVolumeButton(){
