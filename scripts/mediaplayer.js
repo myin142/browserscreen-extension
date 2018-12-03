@@ -12,9 +12,6 @@ const identifiers = {
     progressSlider: prefix + "progress-slider",
 
     timeDisplay: prefix + "time-display",
-    timeCurr: prefix + "time-current",
-    timeTotal: prefix + "time-total",
-
     qualityLabel: prefix + "quality-label",
     playSpeed: prefix + "playback-speed",
 
@@ -186,8 +183,10 @@ class MediaPlayer extends Container{
         let volumeSlider = new VolumeSlider(video);
         let progressBar = new ProgressBar(video);
 
+        let timeLabel = this.createTimeLabel();
+
         // Add Controls to Containers
-        leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider]);
+        leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider, timeLabel]);
         rightContainer.appendMultiple([fullscreenBtn]);
         subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
 
@@ -200,7 +199,7 @@ class MediaPlayer extends Container{
         this.videoEvents.addEvents(["play", "pause", "ended"], [playBtn]);
         this.videoEvents.addEvent("volumechange", [volumeBtn, volumeSlider]);
         this.videoEvents.addEvent("webkitfullscreenchange", [fullscreenBtn]);
-        this.videoEvents.addEvent("timeupdate", [progressBar]);
+        this.videoEvents.addEvent("timeupdate", [progressBar, timeLabel]);
         this.videoEvents.addEvent("progress", [progressBar.bufferProgress]);
     }
 
@@ -269,6 +268,11 @@ class MediaPlayer extends Container{
         return btn;
     }
 
+    createTimeLabel(){
+        return new Label(identifiers.timeDisplay, () => {
+            return `${Utils.normalizeTime(this.video.currentTime)} / ${Utils.normalizeTime(this.video.duration)}`
+        });
+    }
     createStyle(){
         let css = `
             video::-webkit-media-controls-enclosure{
@@ -547,6 +551,20 @@ class Button extends Container{
     }
 }
 
+/** @class Label @implements {Controls, Listener}
+ *  @desc label (for text) that is mainly updated via @func update()
+ */
+class Label extends Container{
+    constructor(className, updateFn){
+        super(className);
+        this.updateFn = updateFn;
+        this.update();
+    }
+    update(){
+        this.innerHTML = this.updateFn();
+    }
+}
+
 /** @class Slider @implements {Controls, Listener}
  *  @desc Controls Slider with fixed sizes
  *
@@ -755,7 +773,7 @@ class VolumeSlider extends Slider{
             updateValue: (newValue) => video.volume = newValue
         };
         super(values);
-        
+
         this.whileDrag(() => {
             if(video.volume > 0) video.muted = false;
             if(video.volume == 0) video.muted = true;
@@ -995,36 +1013,6 @@ function MediaControls(video, prefix){
         var text = document.createElement("DIV");
         text.innerHTML = video.videoHeight + "p";
         return text;
-    }
-    // Time Display
-    function createTimeLabel(){
-        var timeDisplay = document.createElement("DIV");
-        timeDisplay.classList.add(identifiers.timeDisplay);
-
-        // Element for showing current Time of Video
-        var currTime = document.createElement("SPAN");
-        currTime.innerHTML = getCurrentTime();
-        currTime.classList.add(identifiers.timeCurr);
-
-        // Element for showing duration of video
-        var totalTime = document.createElement("SPAN");
-        totalTime.innerHTML = getTotalTime();
-        totalTime.classList.add(identifiers.timeTotal);
-
-        var separator = getSeparator();
-
-        timeDisplay.appendChild(currTime);
-        timeDisplay.appendChild(separator);
-        timeDisplay.appendChild(totalTime);
-        return timeDisplay;
-    }
-    function getCurrentTime(){
-        var time = video.currentTime;
-        return normalizeTime(time);
-    }
-    function getTotalTime(){
-        var time = video.duration;
-        return normalizeTime(time);
     }
     function getSeparator(){
         // Create Separator between Current Time and Total Time
