@@ -27,10 +27,6 @@ const identifiers = {
 
 // Values for Elements
 const values = {
-    volSliderWidth: 52,
-    progressHeight: 3,
-    progressContainer: 16,
-
     loadingSize: 90,
 
     rewindAmount: 10,
@@ -336,7 +332,7 @@ class MediaPlayer extends Container{
             }
             .${identifiers.playSpeed} ul{
                 position: absolute;
-                bottom: ${(MediaPlayer.controlsHeight + values.progressContainer)}px;
+                bottom: ${(MediaPlayer.controlsHeight + ProgressBar.progressContainer)}px;
                 left: 0;
                 list-style: none;
                 line-height: 25px;
@@ -362,17 +358,17 @@ class MediaPlayer extends Container{
             /* Slider Styles */
             .${identifiers.progressSlider}{
                 position: absolute !important;
-                top: -${(Slider.sliderBarHeight + values.progressContainer) / 2}px;
+                top: -${(Slider.sliderBarHeight + ProgressBar.progressContainer) / 2}px;
                 left: 0;
                 right: 0;
-                height: ${values.progressContainer}px !important;
+                height: ${ProgressBar.progressContainer}px !important;
             }
             .${identifiers.progressSlider}:hover{
                 position: absolute !important;
-                top: -${(Slider.sliderBarHeight + values.progressContainer) / 2}px;
+                top: -${(Slider.sliderBarHeight + ProgressBar.progressContainer) / 2}px;
                 left: 0;
                 right: 0;
-                height: ${values.progressContainer}px !important;
+                height: ${ProgressBar.progressContainer}px !important;
             }
             .${identifiers.progressSlider} .${identifiers.sliderHandle}{
                 transform: scale(0);
@@ -385,7 +381,7 @@ class MediaPlayer extends Container{
                 background: white;
             }
             .${identifiers.volSlider}{
-                width: ${values.volSliderWidth}px;
+                width: ${VolumeSlider.volSliderWidth}px;
             }
             .${identifiers.slider}{
                 display: inline-block;
@@ -724,6 +720,8 @@ class Slider extends Container{
 }
 
 class ProgressBar extends Slider{
+    static get progressHeight(){ return 3; }
+    static get progressContainer(){ return 16; }
     constructor(video){
         let values = {
             valueFn: () => video.currentTime,
@@ -773,6 +771,7 @@ class ProgressBar extends Slider{
 }
 
 class VolumeSlider extends Slider{
+    static get volSliderWidth(){ return 52; }
     constructor(video){
         let values = {
             valueFn: () => video.volume,
