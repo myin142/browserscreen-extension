@@ -28,15 +28,6 @@ const identifiers = {
 // Values for Elements
 const values = {
     loadingSize: 90,
-
-    playbackRates: [
-        0.25,
-        0.5,
-        1,
-        1.25,
-        1.5,
-        2
-    ]
 };
 
 /** @interface Controls
@@ -149,7 +140,7 @@ class Container {
  *
  */
 class MediaPlayer extends Container{
-    static get rewindAmount(){return 10; }
+    static get rewindAmount(){ return 10; }
     static get debugging(){ return true; }
     static get controlsHeight(){ return 36; }
     static get idler(){ return 0; }
@@ -179,10 +170,11 @@ class MediaPlayer extends Container{
 
         let timeLabel = this.createTimeLabel();
         let qualityLabel = this.createQualityLabel();
+        let playrateMenu = this.createPlayRateDropdown();
 
         // Add Controls to Containers
         leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider, timeLabel]);
-        rightContainer.appendMultiple([qualityLabel, fullscreenBtn]);
+        rightContainer.appendMultiple([qualityLabel, playrateMenu, fullscreenBtn]);
         subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
 
         [volumeSlider, progressBar].forEach((item) => {
@@ -197,6 +189,7 @@ class MediaPlayer extends Container{
         this.videoEvents.addEvent("timeupdate", [progressBar, timeLabel]);
         this.videoEvents.addEvent("progress", [progressBar.bufferProgress]);
         this.videoEvents.addEvent("loadedmetadata", [qualityLabel]);
+        this.videoEvents.addEvent("ratechange", [playrateMenu.currentLabel]);
     }
 
     removeControls(){
@@ -274,6 +267,18 @@ class MediaPlayer extends Container{
             return `${this.video.videoHeight}p`;
         });
     }
+    createPlayRateDropdown(){
+        return new Dropdown(identifiers.playSpeed, [
+                0.5,
+                1,
+                1.5,
+                2,
+            ],
+            () => this.video.playbackRate,
+            (value) => this.video.playbackRate = value,
+            item => `${item}x`,
+        );
+    }
 
     createStyle(){
         let css = `
@@ -340,9 +345,6 @@ class MediaPlayer extends Container{
             .${identifiers.playSpeed} li:hover{
                 background: rgba(60,60,60,0.8);
             }
-            .${identifiers.playSpeed} span{
-                display: block;
-            }
             .${identifiers.previewTime}{
                 position: absolute;
                 background: rgba(80,80,80,0.7);
@@ -375,7 +377,7 @@ class MediaPlayer extends Container{
             .${identifiers.progressSlider}:hover .${identifiers.sliderHandle}, .${identifiers.progressSlider}:focus .${identifiers.sliderHandle}{
                 transform: scale(1);
             }
-            .${identifiers.volSlider} .${identifiers.sliderBarMain}, .${identifiers.playSpeed} span:hover{
+            .${identifiers.volSlider} .${identifiers.sliderBarMain}{
                 background: white;
             }
             .${identifiers.volSlider}{
@@ -567,6 +569,59 @@ class Label extends Container{
     }
 }
 
+/** @class Dropdown @implements {Controls}
+ *  @desc dropdown menu to change some settings
+ *
+ *  @var {Label} currentLabel - Shows current value of the setting, @interface Listener
+ */
+class Dropdown extends Container{
+    constructor(className, items, valueFn, updateFn, format = null){
+        super(className);
+        this.format = format;
+
+        let show = false;
+
+        // Create Dropdown
+        let dropdown = new Container(null, "UL");
+        items.forEach(value => {
+            let itemNode = new Container(null, "LI");
+            itemNode.innerHTML = this.formatValue(value);
+
+            dropdown.append(itemNode);
+        });
+        dropdown.node.addEventListener("click", (e) => {
+            let index = this.getIndexOfChild(e.target);
+            updateFn(items[index]);
+
+            this.currentLabel.node.click();
+        });
+
+        // Create Label for current Value
+        this.currentLabel = new Label(null, () => {
+            return this.formatValue(valueFn());
+        });
+        this.currentLabel.node.addEventListener("click", () => {
+            dropdown.node.style.display = (show) ? "none" : "block";
+            show = !show;
+        });
+
+        this.appendMultiple([this.currentLabel, dropdown]);
+    }
+    getIndexOfChild(child){
+        let i = 0;
+        while( (child = child.previousSibling) != null )
+            i++;
+
+        return i;
+    }
+    formatValue(value){
+        if(this.format != null){
+            value = this.format(value);
+        }
+        return value;
+    }
+}
+
 /** @class Slider @implements {Controls, Listener}
  *  @desc Controls Slider with fixed sizes
  *
@@ -717,6 +772,11 @@ class Slider extends Container{
     }
 }
 
+/** @class ProgressBar @extends {Slider}
+ *  @desc Showing Progress and Buffer of Video
+ *
+ * @var {PassiveSlider} bufferProgress - shows current buffered video progress, @interface Listener
+ */
 class ProgressBar extends Slider{
     static get progressHeight(){ return 3; }
     static get progressContainer(){ return 16; }
@@ -873,99 +933,19 @@ function MediaControls(video, prefix){
         return percentage;
     }
 
-    // Create UI Elements of Left Container
-    /*var leftContainer = document.createElement("DIV");
-    var playBtn = createPlayButton();
-    var volBtn = createVolumeButton();
-    var volSlide = createVolumeSlider();
-    var timeLabel = createTimeLabel();
-    var backBtn = createBackButton();
-    var forwardBtn = createForwardButton();
-    leftContainer.appendChild(backBtn);
-    leftContainer.appendChild(playBtn);
-    leftContainer.appendChild(forwardBtn);
-    leftContainer.appendChild(volBtn);
-    leftContainer.appendChild(volSlide);
-    leftContainer.appendChild(timeLabel);
-    leftContainer.classList.add(identifiers.leftContainer);
-
-        // Create UI Elements of Right Container
-        var rightContainer = document.createElement("DIV");
-        var fullscreenBtn = createFullscreenButton();
-        var playSpeedBtn = createPlaySpeedButton();
-        var qualityLabel = createQualityLabel();
-        rightContainer.appendChild(qualityLabel);
-        rightContainer.appendChild(playSpeedBtn);
-        rightContainer.appendChild(fullscreenBtn);
-        rightContainer.classList.add(identifiers.rightContainer);
-
-        // Create Progress Bar and Add elements to sub container
-        var progressBar = createProgressBar();
-        subContainer.appendChild(progressBar);
-        subContainer.appendChild(leftContainer);
-        subContainer.appendChild(rightContainer);
-
-        // Update UI for first display
-        updateVolumeButton();
-        updateCurrentProgress();
-        updateCurrentBuffer();
-
-        // Add Listeners to Video and add Style
-        addVideoListeners();
-
-        /* PUBLIC FUNCTIONS */
-        // Remove Controls and Listeners from original video source
-
     // Start Idler
         var idleInterval = startIdler();
         return container;
 
         // Video Listeners
         function addVideoListeners(){
-            video.addEventListener("timeupdate", videoTimeListener);
-            video.addEventListener("seeked", videoSeekListener);
             video.addEventListener("loadedmetadata", videoMetadataListener);
-            video.addEventListener("ratechange", videoRateListener);
-            video.addEventListener("progress", videoProgressListener);
             video.addEventListener("waiting", videoWaitListener);
             video.addEventListener("playing", videoPlayingListener);
             video.addEventListener("mouseleave", videoMouseLeaveListener);
             video.addEventListener("mousemove", videoMouseMoveListener);
             container.addEventListener("mousemove", videoMouseMoveListener);
             container.addEventListener("transitionend", controlsTransitionEndListener);
-        }
-        function videoPlayListener(){
-            idleInterval = startIdler();
-        }
-        function videoPauseListener(){
-            clearIdler();
-            showControls(1);
-        }
-
-        function videoTimeListener(){
-            // No Update on seeking and paused videos
-            if(video.seeking || video.paused) return;
-
-            // Update Time Display
-            var currTimeLabel = timeLabel.querySelector("." + identifiers.timeCurr);
-            var time = getCurrentTime();
-            if(currTimeLabel.innerHTML != time){
-                currTimeLabel.innerHTML = time;
-            }
-
-            // Update Progress Bar for current Time
-            updateCurrentProgress();
-        }
-        function videoSeekListener(){
-            // Update Time Display
-            var currTimeLabel = timeLabel.querySelector("." + identifiers.timeCurr);
-            var time = getCurrentTime();
-            if(currTimeLabel.innerHTML != time){
-                currTimeLabel.innerHTML = time;
-            }
-
-            // Update Progress Bar for current Time
-            updateCurrentProgress();
         }
         function videoMetadataListener(){
             // When Metadata is now available, update TotalTime and Quality Label
@@ -982,12 +962,6 @@ function MediaControls(video, prefix){
             }else{
                 changeFullscreen(fullscreenBtn);
             }
-        }
-        function videoRateListener(){
-            updatePlayback();
-        }
-        function videoProgressListener(){
-            updateCurrentBuffer();
         }
         function videoWaitListener(){
             displayLoading();
@@ -1116,47 +1090,4 @@ function MediaControls(video, prefix){
             idleInterval = null;
             logger("Stop Idler");
         }
-
-    /*** Controls UI ***/
-
-    // Playback Speed Button
-    function createPlaySpeedButton(){
-        var container = document.createElement("DIV");
-        container.classList.add(identifiers.playSpeed);
-
-        var currRate = document.createElement("SPAN");
-        currRate.innerHTML = video.playbackRate + "x";
-        container.appendChild(currRate);
-
-        var playbackOptions = document.createElement("UL");
-        for(var i = 0; i < values.playbackRates.length; i++){
-            var option = document.createElement("LI");
-            option.innerHTML = values.playbackRates[i];
-            playbackOptions.appendChild(option);
-        }
-        container.appendChild(playbackOptions);
-
-        // Show Playback Options on click
-        currRate.addEventListener("click", function(){
-            toggleDisplay(playbackOptions);
-        });
-
-        // Change Playback Rate and hide Options
-        playbackOptions.addEventListener("click", function(e){
-            var target = e.srcElement;
-            video.playbackRate = target.innerHTML;
-            toggleDisplay(playbackOptions);
-        });
-
-        return container;
-    }
-    function toggleDisplay(elem){
-        var display = elem.style.display;
-        elem.style.display = (display == "block") ? "none" : "block";
-    }
-    function updatePlayback(){
-        // Update Playback Rate Label
-        var rateText = playSpeedBtn.querySelector("SPAN");
-        rateText.innerHTML = video.playbackRate + "x";
-    }
 }
