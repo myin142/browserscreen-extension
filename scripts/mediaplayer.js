@@ -184,10 +184,11 @@ class MediaPlayer extends Container{
         let progressBar = new ProgressBar(video);
 
         let timeLabel = this.createTimeLabel();
+        let qualityLabel = this.createQualityLabel();
 
         // Add Controls to Containers
         leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider, timeLabel]);
-        rightContainer.appendMultiple([fullscreenBtn]);
+        rightContainer.appendMultiple([qualityLabel, fullscreenBtn]);
         subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
 
         [volumeSlider, progressBar].forEach((item) => {
@@ -201,6 +202,7 @@ class MediaPlayer extends Container{
         this.videoEvents.addEvent("webkitfullscreenchange", [fullscreenBtn]);
         this.videoEvents.addEvent("timeupdate", [progressBar, timeLabel]);
         this.videoEvents.addEvent("progress", [progressBar.bufferProgress]);
+        this.videoEvents.addEvent("loadedmetadata", [qualityLabel]);
     }
 
     removeControls(){
@@ -273,6 +275,12 @@ class MediaPlayer extends Container{
             return `${Utils.normalizeTime(this.video.currentTime)} / ${Utils.normalizeTime(this.video.duration)}`
         });
     }
+    createQualityLabel(){
+        return new Label(identifiers.qualityLabel, () => {
+            return `${this.video.videoHeight}p`;
+        });
+    }
+
     createStyle(){
         let css = `
             video::-webkit-media-controls-enclosure{
@@ -866,27 +874,6 @@ function MediaControls(video, prefix){
         var max = bar.getBoundingClientRect().right - bar.getBoundingClientRect().left;
         var percentage = offset / max;
         return percentage;
-    }
-
-    // Quality Button
-    function createQualityLabel(){
-        var container = document.createElement("DIV");
-        container.classList.add(identifiers.qualityLabel);
-        container.appendChild(getQuality());
-
-        return container;
-    }
-    function getQuality(){
-        // Get height of video and display as Quality
-        var text = document.createElement("DIV");
-        text.innerHTML = video.videoHeight + "p";
-        return text;
-    }
-    function getSeparator(){
-        // Create Separator between Current Time and Total Time
-        var sep = document.createElement("SPAN");
-        sep.innerHTML = " / ";
-        return sep;
     }
 
     // Create UI Elements of Left Container
