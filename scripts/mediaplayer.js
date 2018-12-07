@@ -37,10 +37,10 @@ const identifiers = {
  * @function update - Update Object/HTML View after Listener Event occurred
  */
 
-/** @class VideoEvent
- *  @desc Manages all events from a video
+/** @class EventHandler
+ *  @desc Manages all events from a element
  *
- * @var {HTML5Element} video - Video where EventListener are added
+ * @var {HTML5Element} elem - Element where EventListener are added
  * @var {Array[String]} events - List of all events with their funtions, used for removing events
  *
  * @function addEvent - Add Event to Video with list of listener updating
@@ -51,21 +51,27 @@ const identifiers = {
  *  @param {Array[String]} events
  *  @param {Array[Listeners]} listeners
  *
- * @function removeAll - Remove all events from video
+ * @function removeAll - Remove all events from element
  *
  */
-class VideoEvent{
-    constructor(video){
-        this.video = video;
+class EventHandler{
+    constructor(elem){
+        this.elem = elem;
         this.events = new Array();
     }
-    addEvent(event, listeners){
+    addEvent(event, listener){
         let eventFn = function(){
-            listeners.forEach((item) => {
+            listener.forEach((item) => {
                 item.update(event);
             });
         }
-        this.video.addEventListener(event, eventFn);
+
+        // Directly use listener if it is a function
+        if(typeof listener === 'function'){
+            eventFn = listener;
+        }
+
+        this.elem.addEventListener(event, eventFn);
 
         this.events.push({ev: event, fn: eventFn});
     }
@@ -76,7 +82,7 @@ class VideoEvent{
     }
     removeAll(){
         this.events.forEach((item) =>{
-            this.video.removeEventListener(item.ev, item.fn);
+            this.elem.removeEventListener(item.ev, item.fn);
         });
     }
 }
@@ -178,7 +184,7 @@ class MediaPlayer extends Container{
         });
 
         // Add Event Listener to Video
-        this.videoEvents = new VideoEvent(video);
+        this.videoEvents = new EventHandler(video);
         this.videoEvents.addEvents(["play", "pause", "ended"], [playBtn]);
         this.videoEvents.addEvent("volumechange", [volumeBtn, volumeSlider]);
         this.videoEvents.addEvent("webkitfullscreenchange", [fullscreenBtn]);
