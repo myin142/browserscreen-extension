@@ -684,6 +684,9 @@ class Dropdown extends Container{
             this.currentLabel.node.click();
         });
 
+        // Set initial display of dropdown, so that state is known when hiding controls
+        dropdown.node.style.display = "none";
+
         // Create Label for current Value
         this.currentLabel = new Label(null, () => {
             return this.formatValue(valueFn());
