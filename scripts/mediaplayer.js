@@ -60,15 +60,17 @@ class EventHandler{
         this.events = new Array();
     }
     addEvent(event, listener){
-        let eventFn = function(){
-            listener.forEach((item) => {
-                item.update(event);
-            });
-        }
+        let eventFn;
 
         // Directly use listener if it is a function
         if(typeof listener === 'function'){
             eventFn = listener;
+        }else{
+            eventFn = function(){
+                listener.forEach((item) => {
+                    item.update(event);
+             });
+        }
         }
 
         this.elem.addEventListener(event, eventFn);
