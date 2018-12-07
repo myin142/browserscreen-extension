@@ -70,7 +70,7 @@ class EventHandler{
                 listener.forEach((item) => {
                     item.update(event);
              });
-        }
+            }
         }
 
         this.elem.addEventListener(event, eventFn);
@@ -152,6 +152,20 @@ class MediaPlayer extends Container{
 
         this.video = video;
 
+        // Setup Idler to hide controls after 5 seconds of inactivity
+        // idler = 0 -> starts idler
+        // idler = -1 -> stops idler
+        // Idler has to be setup before lock button is created
+        this.startIdler();
+        
+        // Listen to Click and KeyUp because pause can be removed from a click or space press
+        // Note: KeyPress does not get called on space press
+        // Set idler directly to 5 on mouse leave to have a consistent showControls call
+        this.documentEvents = new EventHandler(document);
+        this.documentEvents.addEvents(["click", "keyup", "mousemove"], this.resetIdler.bind(this));
+        this.documentEvents.addEvent("mouseleave", () => this.idler = 5);
+        this.documentEvents.addEvent("mouseenter", this.resetIdler.bind(this));
+
         // Create Container Layout
         let leftContainer = new Container(identifiers.leftContainer);
         let rightContainer = new Container(identifiers.rightContainer);
@@ -166,6 +180,7 @@ class MediaPlayer extends Container{
         let forwardBtn = this.createForwardButton();
         let rewindBtn = this.createRewindButton();
         let fullscreenBtn = this.createFullscreenButton();
+        let lockBtn = this.createLockButton();
         let volumeSlider = new VolumeSlider(video);
         let progressBar = new ProgressBar(video);
 
@@ -176,7 +191,7 @@ class MediaPlayer extends Container{
 
         // Add Controls to Containers
         leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider, timeLabel]);
-        rightContainer.appendMultiple([qualityLabel, playrateMenu, fullscreenBtn]);
+        rightContainer.appendMultiple([qualityLabel, playrateMenu, fullscreenBtn, lockBtn]);
         subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
         this.appendMultiple([subContainer, loadingIcon]);
 
@@ -194,24 +209,12 @@ class MediaPlayer extends Container{
         this.videoEvents.addEvent("loadedmetadata", [qualityLabel]);
         this.videoEvents.addEvent("ratechange", [playrateMenu.currentLabel]);
         this.videoEvents.addEvents(["waiting", "playing"], [loadingIcon]);
-
-        // Setup Idler to hide controls after 5 seconds of inactivity
-        // idler = 0 -> starts idler
-        // idler = -1 -> stops idler
-        this.startIdler();
-        
-        // Listen to Click and KeyUp because pause can be removed from a click or space press
-        // Note: KeyPress does not get called on space press
-        // Set idler directly to 5 on mouse leave to have a consistent showControls call
-        this.documentEvents = new EventHandler(document);
-        this.documentEvents.addEvents(["click", "keyup", "mousemove"], this.resetIdler.bind(this));
-        this.documentEvents.addEvent("mouseleave", () => this.idler = 5);
-        this.documentEvents.addEvent("mouseenter", this.resetIdler.bind(this));
     }
 
     destroyIdler(){
         clearInterval(this.idleTimer);
         this.idleTimer = undefined;
+        Utils.logger("Destroying Idler");
     }
     stopIdler(){
         this.idler = -1;
@@ -253,7 +256,7 @@ class MediaPlayer extends Container{
 
             if(this.idler >= 5){
                 this.showControls(0);
-    }
+            }
         }
     }
     showControls(show){
@@ -295,6 +298,14 @@ class MediaPlayer extends Container{
         this.destroyIdler();
     }
 
+    createLockButton(){
+        let updateEvent = new Event('update');
+
+        return this.createButton([
+            {name: "unlocked", condition: () => this.idleTimer != undefined, action: () => this.destroyIdler()},
+            {name: "locked", condition: () => this.idleTimer == undefined, action: () => this.startIdler()},
+        ]);
+    }
     createFullscreenButton(){
         return this.createButton([
             {name: "fullscreen", condition: () => document.webkitFullscreenElement == null, action: () => this.video.webkitRequestFullscreen()},
@@ -361,6 +372,7 @@ class MediaPlayer extends Container{
                 1,
                 1.5,
                 2,
+                4,
             ],
             () => this.video.playbackRate,
             (value) => this.video.playbackRate = value,
@@ -605,7 +617,10 @@ class Button extends Container{
             fastForward: "M 17.781 20.541 L 17.781 26.317 L 23.383 22.158 L 28.985 18 L 23.383 13.842 L 17.781 9.683 L 17.781 15.459 L 15.602 13.842 L 10 9.683 L 10 18 L 10 26.317 L 15.602 22.158 L 17.781 20.541 Z",
 
             fullscreen: "M 10 16 L 12 16 L 12 12 L 16 12 L 16 10 L 10 10 L 10 16 L 10 16 Z  M 12 20 L 10 20 L 10 26 L 16 26 L 16 24 L 12 24 L 12 20 L 12 20 Z  M 26 16 L 24 16 L 24 12 L 20 12 L 20 10 L 26 10 L 26 16 L 26 16 Z  M 24 20 L 26 20 L 26 26 L 20 26 L 20 24 L 24 24 L 24 20 L 24 20 Z",
-            exitFullscreen: "M 14 14 L 10 14 L 10 16 L 16 16 L 16 10 L 14 10 L 14 14 L 14 14 Z  M 22 14 L 22 10 L 20 10 L 20 16 L 26 16 L 26 14 L 22 14 L 22 14 Z  M 20 26 L 22 26 L 22 22 L 26 22 L 26 20 L 20 20 L 20 26 L 20 26 Z  M 10 22 L 14 22 L 14 26 L 16 26 L 16 20 L 10 20 L 10 22 L 10 22 Z"
+            exitFullscreen: "M 14 14 L 10 14 L 10 16 L 16 16 L 16 10 L 14 10 L 14 14 L 14 14 Z  M 22 14 L 22 10 L 20 10 L 20 16 L 26 16 L 26 14 L 22 14 L 22 14 Z  M 20 26 L 22 26 L 22 22 L 26 22 L 26 20 L 20 20 L 20 26 L 20 26 Z  M 10 22 L 14 22 L 14 26 L 16 26 L 16 20 L 10 20 L 10 22 L 10 22 Z",
+
+            locked: "M 15 16.356 L 21 16.356 L 21 12.17 C 21 11.91 20.93 11.65 20.8 11.41 C 20.66 11.14 20.46 10.91 20.21 10.72 C 19.58 10.24 18.8 9.98 18 10 C 17.2 9.98 16.42 10.24 15.78 10.72 C 15.32 11.06 15.03 11.6 15 12.17 L 15 16.356 Z  M 23 16.4 C 24.139 16.618 25 17.62 25 18.822 L 25 24.85 C 25 26.211 23.895 27.316 22.534 27.316 L 13.466 27.316 C 12.105 27.316 11 26.211 11 24.85 L 11 18.822 C 11 17.62 11.861 16.618 13 16.4 L 13 12.15 C 13 12.13 13 12.12 13 12.11 C 13.05 10.92 13.63 9.83 14.58 9.12 C 15.57 8.38 16.77 7.98 18 8 C 19.24 7.98 20.45 8.38 21.44 9.14 C 21.9 9.49 22.28 9.94 22.56 10.46 C 22.85 10.98 23 11.57 23 12.16 C 23 12.16 23 12.17 23 12.17 L 23 16.4 Z",
+            unlocked: "M 15 16.356 L 22.534 16.356 C 23.895 16.356 25 17.461 25 18.822 L 25 24.85 C 25 26.211 23.895 27.316 22.534 27.316 L 13.466 27.316 C 12.105 27.316 11 26.211 11 24.85 L 11 18.822 C 11 17.62 11.861 16.618 13 16.4 L 13 12.15 C 13 12.13 13 12.12 13 12.11 C 13.05 10.92 13.63 9.83 14.58 9.12 C 15.57 8.38 16.77 7.98 18 8 C 19.24 7.98 20.45 8.38 21.44 9.14 C 21.9 9.49 22.28 9.94 22.56 10.46 C 22.85 10.98 23 11.57 23 12.16 C 23 12.16 23 12.17 23 12.17 L 21 12.17 C 21 11.91 20.93 11.65 20.8 11.41 C 20.66 11.14 20.46 10.91 20.21 10.72 C 19.58 10.24 18.8 9.98 18 10 C 17.2 9.98 16.42 10.24 15.78 10.72 C 15.32 11.06 15.03 11.6 15 12.17 L 15 16.356 Z",
         }
     }
     constructor(){
@@ -614,8 +629,15 @@ class Button extends Container{
         this.activeState = -1;
 
         // Create Generic Button
-        this.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#CCC"/></svg>';
-        this.node.addEventListener("click", () => this.states[this.activeState].action());
+        this.innerHTML = '<svg viewBox="0 0 36 36" width="36" height="36"><path fill="#CCC" fill-rule="evenodd" /></svg>';
+        this.node.addEventListener("click", () => {
+            this.states[this.activeState].action()
+
+            // After every action we have to update the state
+            // This is needed for buttons without direct connection to events
+            // Like the lock button
+            this.update();
+        });
     }
     addState(label, condition, action){
         this.states.push({label: label, condition: condition, action: action});
