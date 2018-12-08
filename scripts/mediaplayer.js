@@ -69,7 +69,7 @@ class EventHandler{
             eventFn = function(){
                 listener.forEach((item) => {
                     item.update(event);
-             });
+                });
             }
         }
 
