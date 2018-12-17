@@ -784,6 +784,7 @@ class Slider extends Container{
         this.updateValue = values.updateValue;
         this.realtime = true;
         this.dragging = false;
+        this.fullsize = false;
 
         this.createSlider();
     }
@@ -792,6 +793,9 @@ class Slider extends Container{
     }
     setLabel(label){
         this.label = label;
+    }
+    setFullsize(bool){
+        this.fullsize = bool;
     }
 
     beforeDrag(fn){
@@ -843,14 +847,14 @@ class Slider extends Container{
         }
     }
     getNewValue(e){
-        let handleSize = Slider.sliderHandleSize;
-
         // Has to be called everytime, because window can be resized
-        this.sliderL = this.node.getBoundingClientRect().left + handleSize/2;
-        this.sliderR = this.node.getBoundingClientRect().right - handleSize/2;
+        this.sliderL = this.node.getBoundingClientRect().left;
+        if(!this.fullsize){
+            this.sliderL += Slider.sliderHandleSize/2;
+        }
 
-        // Get relative x position inside slider
-        let max = this.sliderR - this.sliderL;
+        // Controls how far the drag can go inside the slider
+        let max = this.realWidth;
         let relX = e.pageX - this.sliderL;
         if(relX >= max){
             relX = max;
@@ -867,10 +871,14 @@ class Slider extends Container{
     }
     updateNodeValues(){
         let sliderSize = parseInt(Utils.getComputedStyle(this.node, "width"));
-        this.realWidth = sliderSize - Slider.sliderHandleSize;
+        this.realWidth = sliderSize;
+        if(!this.fullsize){
+            this.realWidth -= Slider.sliderHandleSize;
+        }
     }
     updateHandle(percent){
-        this.handle.node.style.left = (percent * this.realWidth) + "px";
+        let handleOffset = (percent * this.realWidth) - ((this.fullsize) ? Slider.sliderHandleSize/2 : 0);
+        this.handle.node.style.left = `${handleOffset}px`;
         this.sliderBarMain.node.style.transform = `scaleX(${percent})`;
     }
     update(){
@@ -913,6 +921,7 @@ class ProgressBar extends Slider{
         this.setLabel("Video Progress");
         this.addClass(identifiers.progressSlider);
         this.setRealtime(false);
+        this.setFullsize(true);
 
         this.bufferProgress = new PassiveSlider({
             valueFn: () => this.getCurrentBuffer(video),
