@@ -57,7 +57,7 @@ const identifiers = {
 class EventHandler{
     constructor(elem){
         this.elem = elem;
-        this.events = new Array();
+        this.events = [];
     }
     addEvent(event, listener){
         let eventFn;
@@ -144,6 +144,7 @@ class Container {
  */
 class MediaPlayer extends Container{
     static get rewindAmount(){ return 10; }
+    static get introSkipAmount(){ return 90; }
     static get debugging(){ return true; }
     static get controlsHeight(){ return 36; }
 
@@ -181,6 +182,7 @@ class MediaPlayer extends Container{
         let rewindBtn = this.createRewindButton();
         let fullscreenBtn = this.createFullscreenButton();
         let lockBtn = this.createLockButton();
+        let introSkipBtn = this.createIntroSkipButton();
         let volumeSlider = new VolumeSlider(video);
         let progressBar = new ProgressBar(video);
 
@@ -191,7 +193,7 @@ class MediaPlayer extends Container{
 
         // Add Controls to Containers
         leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider, timeLabel]);
-        rightContainer.appendMultiple([qualityLabel, playrateMenu, fullscreenBtn, lockBtn]);
+        rightContainer.appendMultiple([qualityLabel, playrateMenu, fullscreenBtn, lockBtn, introSkipBtn]);
         subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
         this.appendMultiple([subContainer, loadingIcon]);
 
@@ -298,6 +300,11 @@ class MediaPlayer extends Container{
         this.destroyIdler();
     }
 
+    createIntroSkipButton(){
+        return this.createButton([
+            {name: "introSkip", condition: () => true, action: () => this.video.currentTime += MediaPlayer.introSkipAmount}
+        ]);
+    }
     createLockButton(){
         let updateEvent = new Event('update');
 
@@ -621,6 +628,7 @@ class Button extends Container{
 
             locked: "M 15 16.356 L 21 16.356 L 21 12.17 C 21 11.91 20.93 11.65 20.8 11.41 C 20.66 11.14 20.46 10.91 20.21 10.72 C 19.58 10.24 18.8 9.98 18 10 C 17.2 9.98 16.42 10.24 15.78 10.72 C 15.32 11.06 15.03 11.6 15 12.17 L 15 16.356 Z  M 23 16.4 C 24.139 16.618 25 17.62 25 18.822 L 25 24.85 C 25 26.211 23.895 27.316 22.534 27.316 L 13.466 27.316 C 12.105 27.316 11 26.211 11 24.85 L 11 18.822 C 11 17.62 11.861 16.618 13 16.4 L 13 12.15 C 13 12.13 13 12.12 13 12.11 C 13.05 10.92 13.63 9.83 14.58 9.12 C 15.57 8.38 16.77 7.98 18 8 C 19.24 7.98 20.45 8.38 21.44 9.14 C 21.9 9.49 22.28 9.94 22.56 10.46 C 22.85 10.98 23 11.57 23 12.16 C 23 12.16 23 12.17 23 12.17 L 23 16.4 Z",
             unlocked: "M 15 16.356 L 22.534 16.356 C 23.895 16.356 25 17.461 25 18.822 L 25 24.85 C 25 26.211 23.895 27.316 22.534 27.316 L 13.466 27.316 C 12.105 27.316 11 26.211 11 24.85 L 11 18.822 C 11 17.62 11.861 16.618 13 16.4 L 13 12.15 C 13 12.13 13 12.12 13 12.11 C 13.05 10.92 13.63 9.83 14.58 9.12 C 15.57 8.38 16.77 7.98 18 8 C 19.24 7.98 20.45 8.38 21.44 9.14 C 21.9 9.49 22.28 9.94 22.56 10.46 C 22.85 10.98 23 11.57 23 12.16 C 23 12.16 23 12.17 23 12.17 L 21 12.17 C 21 11.91 20.93 11.65 20.8 11.41 C 20.66 11.14 20.46 10.91 20.21 10.72 C 19.58 10.24 18.8 9.98 18 10 C 17.2 9.98 16.42 10.24 15.78 10.72 C 15.32 11.06 15.03 11.6 15 12.17 L 15 16.356 Z",
+            introSkip: "M 17 22.923 L 12 26 L 12 22.923 L 7 26 L 7 10 L 12 13.077 L 12 10 L 17 13.077 L 17 10 L 30 18 L 17 26 L 17 22.923 Z",
         }
     }
     constructor(){
