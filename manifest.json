@@ -9,7 +9,7 @@
 
 	"name": "BrowserScreen",
 	"description": "Resizing Video to fit browser screen",
-	"version": "1.0",
+	"version": "1.0.1",
 
 	"content_scripts":[
 		{"js": ["scripts/mediaplayer.js", "scripts/content.js"],"matches": ["*://*/*"], "match_about_blank": true, "all_frames": true}
