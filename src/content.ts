@@ -178,7 +178,7 @@ function findVideos(root: Element | Document): Element {
     return vid;
 }
 
-document.addEventListener("webkitfullscreenchange", () => {
+/*document.addEventListener("webkitfullscreenchange", () => {
 
     if(document.fullscreenElement){
         let style = document.querySelector("#" + styleID);
@@ -191,7 +191,7 @@ document.addEventListener("webkitfullscreenchange", () => {
             addToParents(elem, overlayClass);
         }
     }
-});
+});*/
 
 browser.runtime.onMessage.addListener((msg) => {
     if(debugging) console.log("Window: " + window.location.href);
