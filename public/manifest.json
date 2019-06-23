@@ -13,14 +13,14 @@
 
 	"content_scripts":[
 		{
-			"js": ["src/index.js"],
+			"js": ["js/index.js"],
 			"matches": ["*://*/*"],
 			"match_about_blank": true,
 			"all_frames": true
 		}
 	],
 	"background": {
-		"scripts": ["src/background.js"],
+		"scripts": ["js/background.js"],
 		"persistent": false
 	},
 
