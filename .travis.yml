@@ -12,7 +12,7 @@ script:
   - cd dist/ && zip -r release.zip *
 
 deploy:
-  providers: releases
+  provider: releases
   api_key: "$GITHUB_RELEASE_KEY"
   file: "./dist/release.zip"
   skip_cleanup: true
