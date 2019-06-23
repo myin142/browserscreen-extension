@@ -9,12 +9,12 @@ cache:
 script:
   - npm run lint
   - npm run build
+  - cd dist/ && zip -r release.zip *
 
 deploy:
   providers: releases
-  script: ls
   api_key: "$GITHUB_RELEASE_KEY"
-  file: ""
+  file: "./dist/release.zip"
   skip_cleanup: true
   on:
     tags: true
