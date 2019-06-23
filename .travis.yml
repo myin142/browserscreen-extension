@@ -9,6 +9,8 @@ cache:
 script:
   - npm run lint
   - npm run build
+
+before_deploy:
   - cd dist/ && zip -r release.zip *
 
 deploy:
