@@ -1,3 +1,14 @@
+import { MediaPlayer } from "./mediaplayer/mediaplayer";
+
+declare global {
+    interface Window {
+        browser: any;
+        msBrowser: any;
+        chrome: any;
+    }
+}
+declare var browser;
+
 // Cross Browser Support
 window.browser = (function(){
     return window.msBrowser ||
@@ -17,12 +28,12 @@ var mControls = null;
 
 document.addEventListener("webkitfullscreenchange", (event) => {
 
-    if(document.webkitFullscreenElement){
+    if(document.fullscreenElement){
         let style = document.querySelector("#" + styleID);
         if(style == null){
-            document.webkitExitFullscreen();
+            document.exitFullscreen();
 
-            let elem = document.webkitFullscreenElement;
+            let elem = document.fullscreenElement;
             let vid = findVideos(elem);
             resizeElements(vid, false);
             addToParents(elem, overlayClass);
@@ -80,7 +91,7 @@ browser.runtime.onMessage.addListener(function(msg){
         if(debugging) console.log("Restore Video");
 
         // Restore Elements and Remove Controls
-        var vid = document.querySelector("." + videoClass);
+        var vid: any = document.querySelector("." + videoClass);
         restoreElements();
         removeControls();
 
