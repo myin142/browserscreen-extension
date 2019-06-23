@@ -1,23 +1,27 @@
 export class Container implements Controls {
 
-    node: HTMLElement;
+    public node: HTMLElement;
 
-    set innerHTML(text: string){
+    public set innerHTML(text: string){
         this.node.innerHTML = text;
     }
-    constructor(className = null, type = "DIV"){
+
+    public constructor(className = null, type = "DIV"){
         this.node = document.createElement(type);
 
         if(className != null)
             this.addClass(className);
     }
-    addClass(className: string){
+
+    public addClass(className: string): void {
         this.node.classList.add(className);
     }
-    append(child: Container){
+
+    public append(child: Container): void {
         this.node.appendChild(child.node);
     }
-    appendMultiple(children: Container[]){
+
+    public appendMultiple(children: Container[]): void {
         children.forEach((child) => {
             this.append(child);
         });

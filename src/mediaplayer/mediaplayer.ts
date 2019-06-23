@@ -22,12 +22,12 @@ export class MediaPlayer extends Container {
 
     private savedVolume: number;
 
-    static get rewindAmount(){ return 10; }
-    static get introSkipAmount(){ return 90; }
-    static get debugging(){ return true; }
-    static get controlsHeight(){ return 36; }
+    public static get debugging(): boolean { return true; }
+    private static get rewindAmount(): number { return 10; }
+    private static get introSkipAmount(): number { return 90; }
+    private static get controlsHeight(): number { return 36; }
 
-    constructor(video: HTMLVideoElement){
+    public constructor(video: HTMLVideoElement){
         super(identifiers.container);
 
         this.video = video;
@@ -92,15 +92,17 @@ export class MediaPlayer extends Container {
         this.videoEvents.addEvents(["waiting", "playing"], [loadingIcon]);
     }
 
-    destroyIdler(){
+    private destroyIdler(): void {
         clearInterval(this.idleTimer);
         this.idleTimer = undefined;
         Utils.logger("Destroying Idler");
     }
-    stopIdler(){
+
+    private stopIdler(): void {
         this.idler = -1;
     }
-    startIdler(){
+
+    private startIdler(): void {
         this.idler = 0;
 
         // This should only be called from constructor
@@ -110,7 +112,8 @@ export class MediaPlayer extends Container {
             Utils.logger("Creating new idle timer");
         }
     }
-    resetIdler(){
+
+    private resetIdler(): void {
         if(this.idleTimer == undefined) return;
 
         // We have to start idler here manually because
@@ -119,7 +122,8 @@ export class MediaPlayer extends Container {
 
         this.showControls(true);
     }
-    checkIdle(){
+
+    private checkIdle(): void {
         if(this.idler >= 0){
 
             // Pause idle timer if video is paused
@@ -140,7 +144,8 @@ export class MediaPlayer extends Container {
             }
         }
     }
-    showControls(show: boolean){
+
+    private showControls(show: boolean): void {
 
         // Do not do anything if the status is the same
         if(this.showing == show) return;
@@ -165,7 +170,8 @@ export class MediaPlayer extends Container {
         
         this.showing = show;
     }
-    removeControls(){
+
+    public removeControls(): void {
         // Remove Controls Container
         this.node.parentNode.removeChild(this.node);
 
@@ -179,36 +185,39 @@ export class MediaPlayer extends Container {
         this.destroyIdler();
     }
 
-    createIntroSkipButton(){
+    private createIntroSkipButton(): Button {
         return this.createButton([
             {name: "introSkip", condition: () => true, action: () => this.video.currentTime += MediaPlayer.introSkipAmount}
         ]);
     }
-    createLockButton(){
-        let updateEvent = new Event('update');
 
+    private createLockButton(): Button {
         return this.createButton([
             {name: "unlocked", condition: () => this.idleTimer != undefined, action: () => this.destroyIdler()},
             {name: "locked", condition: () => this.idleTimer == undefined, action: () => this.startIdler()},
         ]);
     }
-    createFullscreenButton(){
+
+    private createFullscreenButton(): Button {
         return this.createButton([
             {name: "fullscreen", condition: () => document.fullscreenElement == null, action: () => this.video.requestFullscreen()},
             {name: "exitFullscreen", condition: () => document.fullscreenElement == this.video, action: () => document.exitFullscreen()}
         ]);
     }
-    createRewindButton(){
+
+    private createRewindButton(): Button {
         return this.createButton([
             {name: "rewind", condition: () => true, action: () => this.video.currentTime -= MediaPlayer.rewindAmount}
         ]);
     }
-    createForwardButton(){
+
+    private createForwardButton(): Button {
         return this.createButton([
             {name: "fastForward", condition: () => true, action: () => this.video.currentTime += MediaPlayer.rewindAmount}
         ]);
     }
-    createVolumeButton(){
+
+    private createVolumeButton(): Button {
         let mute = function(){
             this.video.muted = true
             this.savedVolume = this.video.volume;
@@ -227,14 +236,16 @@ export class MediaPlayer extends Container {
             {name: "volumeLow", condition: () => !this.video.muted && this.video.volume < .5, action: mute.bind(this)}
         ]);
     }
-    createPlayButton(){
+
+    private createPlayButton(): Button {
         return this.createButton([
             {name: "play", condition: () => this.video.paused, action: () => this.video.play()},
             {name: "pause", condition: () => !this.video.paused, action: () => this.video.pause()},
             {name: "replay", condition: () => this.video.ended, action: () => this.video.play()}
         ]);
     }
-    createButton(states: ButtonState[]){
+
+    private createButton(states: ButtonState[]): Button {
         let btn = new Button();
         states.forEach((item) => {
             btn.addState(item);
@@ -242,31 +253,33 @@ export class MediaPlayer extends Container {
         return btn;
     }
 
-    createTimeLabel(){
+    private createTimeLabel(): Label {
         return new Label(identifiers.timeDisplay, () => {
             return `${Utils.normalizeTime(this.video.currentTime)} / ${Utils.normalizeTime(this.video.duration)}`
         });
     }
-    createQualityLabel(){
+
+    private createQualityLabel(): Label {
         return new Label(identifiers.qualityLabel, () => {
             return `${this.video.videoHeight}p`;
         });
     }
-    createPlayRateDropdown(){
+
+    private createPlayRateDropdown(): Dropdown {
         return new Dropdown(identifiers.playSpeed, [
-                0.5,
-                1,
-                1.5,
-                2,
-                4,
-            ],
-            () => this.video.playbackRate,
-            (value) => this.video.playbackRate = value,
-            item => `${item}x`,
+            0.5,
+            1,
+            1.5,
+            2,
+            4,
+        ],
+        () => this.video.playbackRate,
+        (value) => this.video.playbackRate = value,
+        item => `${item}x`,
         );
     }
 
-    createStyle(){
+    private createStyle(): HTMLElement{
         let css = `
             video::-webkit-media-controls-enclosure{
                 display: none !important;

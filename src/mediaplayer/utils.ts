@@ -1,7 +1,8 @@
 import { MediaPlayer } from "./mediaplayer";
 
 export class Utils{
-    static normalizeTime(time: number){
+
+    public static normalizeTime(time: number): string{
         // Convert Time to Minutes and Seconds
         let hours = Math.floor(time / 3600);
         let minutes = Math.floor((time - hours * 3600) / 60);
@@ -14,15 +15,18 @@ export class Utils{
 
         return dateTime;
     }
-    static prependTime(time: number): string {
+
+    private static prependTime(time: number): string {
         return `${time < 10 ? '0' : ''}${time}`;
     }
-    static logger(msg: string){
+
+    public static logger(msg: string): void {
         if(MediaPlayer.debugging){
             console.log(msg);
         }
     }
-    static isPointer(){
+
+    public static isPointer(): boolean {
         let hovers = document.querySelector(":hover");
         if(hovers == null){
             this.logger("No Hover Element");
@@ -39,7 +43,8 @@ export class Utils{
         this.logger("Is Pointer: " + pointer);
         return pointer;
     }
-    static getComputedStyle(elem: Element, style: string){
+
+    public static getComputedStyle(elem: Element, style: string): string{
         return window.getComputedStyle(elem, null).getPropertyValue(style);
     }
 }

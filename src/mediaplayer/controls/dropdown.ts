@@ -3,10 +3,10 @@ import { Label } from "./label";
 
 export class Dropdown extends Container implements Controls {
 
-    currentLabel: Label;
+    public currentLabel: Label;
     private format: (x: string) => string;
 
-    constructor(className: string, items: any[], valueFn: () => any, updateFn: (x: any) => void, format: (x: string) => string = null){
+    public constructor(className: string, items: any[], valueFn: () => any, updateFn: (x: any) => void, format: (x: string) => string = null){
         super(className);
         this.format = format;
 
@@ -41,14 +41,16 @@ export class Dropdown extends Container implements Controls {
 
         this.appendMultiple([this.currentLabel, dropdown]);
     }
-    getIndexOfChild(child: Node): number{
+
+    private getIndexOfChild(child: Node): number{
         let i = 0;
         while( (child = child.previousSibling) != null )
             i++;
 
         return i;
     }
-    formatValue(value: string): string{
+
+    private formatValue(value: string): string{
         if(this.format != null){
             value = this.format(value);
         }

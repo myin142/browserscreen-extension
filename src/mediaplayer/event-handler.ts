@@ -3,12 +3,12 @@ export class EventHandler{
     private elem: DocumentAndElementEventHandlers;
     private events: EventItem[];
 
-    constructor(elem: DocumentAndElementEventHandlers){
+    public constructor(elem: DocumentAndElementEventHandlers){
         this.elem = elem;
         this.events = [];
     }
 
-    addEventWithListeners(event: string, listeners: Listener[]){
+    public addEventWithListeners(event: string, listeners: Listener[]): void {
         const eventFn: EventListener = () => {
             listeners.forEach((item) => {
                 item.update(new Event(event));
@@ -18,18 +18,18 @@ export class EventHandler{
         this.addSingleEventListener(event, eventFn);
     }
 
-    addSingleEventListener(event: string, listener: EventListener) {
+    public addSingleEventListener(event: string, listener: EventListener): void {
         this.elem.addEventListener(event, listener);
         this.events.push({name: event, handler: listener});
     }
 
-    addEvents(events: string[], listeners: Listener[]){
+    public addEvents(events: string[], listeners: Listener[]): void {
         events.forEach((item) => {
             this.addEventWithListeners(item, listeners);
         });
     }
 
-    removeAll(){
+    public removeAll(): void {
         this.events.forEach((event) =>{
             this.elem.removeEventListener(event.name, event.handler);
         });

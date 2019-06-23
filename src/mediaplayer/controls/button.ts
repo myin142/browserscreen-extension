@@ -7,8 +7,9 @@ export class Button extends Container implements Controls, Listener {
     private states: ButtonState[];
     private activeState: number;
 
-    static get buttonWidth(){ return 46; }
-    static get paths(){
+    public static get buttonWidth(){ return 46; }
+
+    private static get paths(){
         return {
             play: "M 12,26 12,10 25,18 Z",
             pause: "M 12,26 16,26 16,10 12,10 z M 21,26 25,26 25,10 21,10 z",
@@ -29,9 +30,10 @@ export class Button extends Container implements Controls, Listener {
             introSkip: "M 17 22.923 L 12 26 L 12 22.923 L 7 26 L 7 10 L 12 13.077 L 12 10 L 17 13.077 L 17 10 L 30 18 L 17 26 L 17 22.923 Z",
         }
     }
-    constructor(){
+
+    public constructor(){
         super(identifiers.buttons, "BUTTON");
-        this.states = new Array();
+        this.states = [];
         this.activeState = -1;
 
         // Create Generic Button
@@ -45,7 +47,8 @@ export class Button extends Container implements Controls, Listener {
             this.update();
         });
     }
-    addState({ name, condition, action }: ButtonState){
+
+    public addState({ name, condition, action }: ButtonState): void {
         this.states.push({name, condition, action});
 
         // While Adding State, save current active State
@@ -53,14 +56,16 @@ export class Button extends Container implements Controls, Listener {
             this.changeState(this.states.length - 1);
         }
     }
-    update(){
+
+    public update(): void {
         this.states.forEach((item, index) =>{
             if(item.condition()){
                 this.changeState(index);
             }
         });
     }
-    changeState(index: number){
+
+    private changeState(index: number): void {
         this.activeState = index;
         let label = this.states[this.activeState].name;
 

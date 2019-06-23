@@ -26,13 +26,14 @@ export class Slider extends Container implements Controls, Listener {
     private whileDrag: () => void;
     private afterDrag: () => void;
 
-    static get sliderHandleSize(){ return 12; }
-    static get sliderBarHeight(){ return 3; }
+    public static get sliderHandleSize(): number { return 12; }
+    public static get sliderBarHeight(): number { return 3; }
 
-    get valuePercent(){
+    private get valuePercent(): number {
         return this.valueFn() / this.max;
     }
-    constructor({ valueFn, min, max, updateValue }){
+
+    public constructor({ valueFn, min, max, updateValue }){
         super(identifiers.slider);
 
         this.valueFn = valueFn;
@@ -45,27 +46,32 @@ export class Slider extends Container implements Controls, Listener {
 
         this.createSlider();
     }
-    setRealtime(value: boolean){
+
+    public setRealtime(value: boolean): void {
         this.realtime = value;
     }
-    setLabel(label: string){
+
+    public setLabel(label: string): void {
         this.label = label;
     }
-    setFullsize(bool: boolean){
+
+    public setFullsize(bool: boolean): void {
         this.fullsize = bool;
     }
 
-    setBeforeDrag(fn: () => void){
+    public setBeforeDrag(fn: () => void): void {
         this.beforeDrag = fn;
     }
-    setWhileDrag(fn: () => void){
+
+    public setWhileDrag(fn: () => void): void {
         this.whileDrag = fn;
     }
-    setAfterDrag(fn: () => void){
+
+    public setAfterDrag(fn: () => void): void {
         this.afterDrag = fn;
     }
 
-    createSlider(){
+    private createSlider(): void {
         this.handle = new Container(identifiers.sliderHandle);
         this.sliderBars = new Container(identifiers.sliderBars);
         this.sliderBarMain = new Container(identifiers.sliderBarMain);
@@ -94,7 +100,8 @@ export class Slider extends Container implements Controls, Listener {
             }
         });
     }
-    realtimeUpdate(e: MouseEvent){
+
+    private realtimeUpdate(e: MouseEvent): void {
         let newValue = this.getNewValue(e);
         if(this.realtime){
             this.updateValue(newValue);
@@ -103,7 +110,8 @@ export class Slider extends Container implements Controls, Listener {
             this.updateHandle(tempPercent);
         }
     }
-    getNewValue(e: MouseEvent){
+
+    private getNewValue(e: MouseEvent): number {
         // Has to be called everytime, because window can be resized
         this.sliderL = this.node.getBoundingClientRect().left;
         if(!this.fullsize){
@@ -122,23 +130,27 @@ export class Slider extends Container implements Controls, Listener {
         let percentage = relX / this.realWidth;
         return percentage * this.max;
     }
-    init(){ // For initial position of slider elements
+
+    public init(): void { // For initial position of slider elements
         this.updateNodeValues();
         this.updateHandle(this.valuePercent);
     }
-    updateNodeValues(){
+
+    private updateNodeValues(): void {
         let sliderSize = parseInt(Utils.getComputedStyle(this.node, "width"));
         this.realWidth = sliderSize;
         if(!this.fullsize){
             this.realWidth -= Slider.sliderHandleSize;
         }
     }
-    updateHandle(percent: number){
+
+    private updateHandle(percent: number): void {
         let handleOffset = (percent * this.realWidth) - ((this.fullsize) ? Slider.sliderHandleSize/2 : 0);
         this.handle.node.style.left = `${handleOffset}px`;
         this.sliderBarMain.node.style.transform = `scaleX(${percent})`;
     }
-    update(){
+
+    public update(): void {
         if(!this.realtime && this.dragging) return;
 
         this.updateHandle(this.valuePercent);
@@ -156,16 +168,18 @@ export class PassiveSlider extends Container implements Controls, Listener {
     private max: number;
     private min: number;
 
-    get valuePercent(){
+    private get valuePercent(): number {
         return this.valueFn() / this.max;
     }
-    constructor({ valueFn, min, max }, className = null){
+
+    public constructor({ valueFn, min, max }, className = null){
         super(className);
         this.valueFn = valueFn;
         this.min = min;
         this.max = max;
     }
-    update(){
+
+    public update(): void {
         this.node.style.transform = `scaleX(${this.valuePercent})`;
     }
 }

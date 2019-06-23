@@ -4,11 +4,12 @@ import { identifiers } from "../constants";
 export class ProgressBar extends Slider {
 
     private wasPaused: boolean;
-    bufferProgress: PassiveSlider;
+    public bufferProgress: PassiveSlider;
 
-    static get progressHeight(){ return 3; }
-    static get progressContainer(){ return 16; }
-    constructor(video: HTMLVideoElement){
+    public static get progressContainer(): number { return 16; }
+    public static get progressHeight(): number { return 3; }
+
+    public constructor(video: HTMLVideoElement) {
         let values = {
             valueFn: () => video.currentTime,
             min: 0,
@@ -38,7 +39,8 @@ export class ProgressBar extends Slider {
         this.sliderBars.append(this.bufferProgress);
         this.bufferProgress.update();
     }
-    getCurrentBuffer(video: HTMLVideoElement){
+
+    private getCurrentBuffer(video: HTMLVideoElement): number {
         // Get Index of closest Buffer Range to current Time
         let buffers = video.buffered;
         let index = 0;

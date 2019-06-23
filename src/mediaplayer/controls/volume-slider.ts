@@ -2,8 +2,10 @@ import { Slider } from "./slider";
 import { identifiers } from "../constants";
 
 export class VolumeSlider extends Slider {
-    static get volSliderWidth(){ return 52; }
-    constructor(video: HTMLVideoElement){
+
+    public static get volSliderWidth(){ return 52; }
+
+    public constructor(video: HTMLVideoElement){
         let values = {
             valueFn: () => video.volume,
             min: 0,
