@@ -9,3 +9,12 @@ cache:
 script:
   - npm run lint
   - npm run build
+
+deploy:
+  providers: releases
+  script: ls
+  api_key: ""
+  file: ""
+  skip_cleanup: true
+  on:
+    tags: true
