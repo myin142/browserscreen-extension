@@ -1,3 +1,4 @@
+import { Idler } from './idler';
 import { EventHandler } from './event-handler';
 import { Container } from "./controls/container";
 import { identifiers } from './constants';
@@ -12,13 +13,9 @@ import { Slider } from './controls/slider';
 
 export class MediaPlayer extends Container {
 
-    private video: HTMLVideoElement;
-    private documentEvents: EventHandler;
     private videoEvents: EventHandler;
-
-    private idler: number;
-    private idleTimer: number;
-    private showing: boolean;
+    private idler: Idler;
+    private visible: boolean;
 
     private savedVolume: number;
 
@@ -27,24 +24,14 @@ export class MediaPlayer extends Container {
     private static get introSkipAmount(): number { return 90; }
     private static get controlsHeight(): number { return 36; }
 
-    public constructor(video: HTMLVideoElement){
+    public constructor(private video: HTMLVideoElement){
         super(identifiers.container);
 
-        this.video = video;
-
-        // Setup Idler to hide controls after 5 seconds of inactivity
-        // idler = 0 -> starts idler
-        // idler = -1 -> stops idler
-        // Idler has to be setup before lock button is created
-        this.startIdler();
-        
-        // Listen to Click and KeyUp because pause can be removed from a click or space press
-        // Note: KeyPress does not get called on space press
-        // Set idler directly to 5 on mouse leave to have a consistent showControls call
-        this.documentEvents = new EventHandler(document);
-        this.documentEvents.addEvents(["click", "keyup", "mousemove"], this.resetIdler.bind(this));
-        this.documentEvents.addSingleEventListener("mouseleave", () => this.idler = 5);
-        this.documentEvents.addSingleEventListener("mouseenter", this.resetIdler.bind(this));
+        this.idler = new Idler({
+            onIdle: () => this.showControls(false),
+            onMove: () => this.showControls(true),
+            prevent: () => this.video.paused || Utils.isPointer(),
+        });
 
         // Create Container Layout
         let leftContainer = new Container(identifiers.leftContainer);
@@ -60,7 +47,6 @@ export class MediaPlayer extends Container {
         let forwardBtn = this.createForwardButton();
         let rewindBtn = this.createRewindButton();
         let fullscreenBtn = this.createFullscreenButton();
-        let lockBtn = this.createLockButton();
         let introSkipBtn = this.createIntroSkipButton();
         let volumeSlider = new VolumeSlider(video);
         let progressBar = new ProgressBar(video);
@@ -72,7 +58,7 @@ export class MediaPlayer extends Container {
 
         // Add Controls to Containers
         leftContainer.appendMultiple([rewindBtn, playBtn, forwardBtn, volumeBtn, volumeSlider, timeLabel]);
-        rightContainer.appendMultiple([qualityLabel, playrateMenu, fullscreenBtn, lockBtn, introSkipBtn]);
+        rightContainer.appendMultiple([qualityLabel, playrateMenu, fullscreenBtn, introSkipBtn]);
         subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
         this.appendMultiple([subContainer, loadingIcon]);
 
@@ -82,81 +68,25 @@ export class MediaPlayer extends Container {
 
         // Add Event Listener to Video
         this.videoEvents = new EventHandler(video);
-        this.videoEvents.addEvents(["play", "pause", "ended"], [playBtn]);
-        this.videoEvents.addEventWithListeners("volumechange", [volumeBtn, volumeSlider]);
-        this.videoEvents.addEventWithListeners("webkitfullscreenchange", [fullscreenBtn]);
-        this.videoEvents.addEventWithListeners("timeupdate", [progressBar, timeLabel]);
-        this.videoEvents.addEventWithListeners("progress", [progressBar.bufferProgress]);
-        this.videoEvents.addEventWithListeners("loadedmetadata", [qualityLabel]);
-        this.videoEvents.addEventWithListeners("ratechange", [playrateMenu.currentLabel]);
-        this.videoEvents.addEvents(["waiting", "playing"], [loadingIcon]);
-    }
-
-    private destroyIdler(): void {
-        clearInterval(this.idleTimer);
-        this.idleTimer = undefined;
-        Utils.logger("Destroying Idler");
-    }
-
-    private stopIdler(): void {
-        this.idler = -1;
-    }
-
-    private startIdler(): void {
-        this.idler = 0;
-
-        // This should only be called from constructor
-        if(this.idleTimer == undefined){
-            this.idleTimer = setInterval(this.checkIdle.bind(this), 1000);
-            this.showing = true;
-            Utils.logger("Creating new idle timer");
-        }
-    }
-
-    private resetIdler(): void {
-        if(this.idleTimer == undefined) return;
-
-        // We have to start idler here manually because
-        // it also has to be called even if controls are already shown
-        this.startIdler();
-
-        this.showControls(true);
-    }
-
-    private checkIdle(): void {
-        if(this.idler >= 0){
-
-            // Pause idle timer if video is paused
-            // otherwise controls will hide instantly after play
-            if(this.video.paused || Utils.isPointer()){
-                this.stopIdler();
-                Utils.logger("Stopping idler");
-            }
-
-            // Limit idler value to 5(seconds)
-            else if(this.idler < 5){
-                this.idler += 1;
-                Utils.logger(`Increased Idler: ${this.idler}`);
-            }
-
-            if(this.idler >= 5){
-                this.showControls(false);
-            }
-        }
+        this.videoEvents.addEvent(["play", "pause", "ended"], [playBtn]);
+        this.videoEvents.addEvent("volumechange", [volumeBtn, volumeSlider]);
+        this.videoEvents.addEvent("webkitfullscreenchange", [fullscreenBtn]);
+        this.videoEvents.addEvent("timeupdate", [progressBar, timeLabel]);
+        this.videoEvents.addEvent("progress", [progressBar.bufferProgress]);
+        this.videoEvents.addEvent("loadedmetadata", [qualityLabel]);
+        this.videoEvents.addEvent("ratechange", [playrateMenu.currentLabel]);
+        this.videoEvents.addEvent(["waiting", "playing"], [loadingIcon]);
     }
 
     private showControls(show: boolean): void {
 
         // Do not do anything if the status is the same
-        if(this.showing == show) return;
+        if(this.visible == show) return;
 
         if(show){
-            this.startIdler();
             this.node.style.marginBottom = "";
-
             Utils.logger("Show Controls");
         }else{
-            this.stopIdler();
             this.node.style.marginBottom = `-${MediaPlayer.controlsHeight}px`;
 
             // Hide Playrate Dropdown if it is visible
@@ -168,7 +98,7 @@ export class MediaPlayer extends Container {
             Utils.logger("Hide Controls");
         }
         
-        this.showing = show;
+        this.visible = show;
     }
 
     public removeControls(): void {
@@ -181,20 +111,12 @@ export class MediaPlayer extends Container {
 
         // Remove all custom settings from Video and Document
         this.videoEvents.removeAll();
-        this.documentEvents.removeAll();
-        this.destroyIdler();
+        this.idler.destroy();
     }
 
     private createIntroSkipButton(): Button {
         return this.createButton([
             {name: "introSkip", condition: () => true, action: () => this.video.currentTime += MediaPlayer.introSkipAmount}
-        ]);
-    }
-
-    private createLockButton(): Button {
-        return this.createButton([
-            {name: "unlocked", condition: () => this.idleTimer != undefined, action: () => this.destroyIdler()},
-            {name: "locked", condition: () => this.idleTimer == undefined, action: () => this.startIdler()},
         ]);
     }
 
@@ -218,7 +140,7 @@ export class MediaPlayer extends Container {
     }
 
     private createVolumeButton(): Button {
-        let mute = function(){
+        let mute = () => {
             this.video.muted = true
             this.savedVolume = this.video.volume;
             this.video.volume = 0;
