@@ -15,7 +15,6 @@ export class MediaPlayer extends Container {
 
     private videoEvents: EventHandler;
     private idler: Idler;
-    private visible: boolean;
 
     private savedVolume: number;
 
@@ -28,8 +27,8 @@ export class MediaPlayer extends Container {
         super(identifiers.container);
 
         this.idler = new Idler({
-            onIdle: () => this.showControls(false),
-            onMove: () => this.showControls(true),
+            onIdle: () => this.hideControls(),
+            onMove: () => this.showControls(),
             prevent: () => this.video.paused || Utils.isPointer(),
         });
 
@@ -62,6 +61,7 @@ export class MediaPlayer extends Container {
         subContainer.appendMultiple([progressBar, leftContainer, rightContainer]);
         this.appendMultiple([subContainer, loadingIcon]);
 
+        // This has to be called after elements are appended to document
         [volumeSlider, progressBar].forEach((item) => {
             item.init();
         });
@@ -78,27 +78,27 @@ export class MediaPlayer extends Container {
         this.videoEvents.addEvent(["waiting", "playing"], [loadingIcon]);
     }
 
-    private showControls(show: boolean): void {
+    private showControls(): void {
+        if(this.node.style.marginBottom === '') return;
 
-        // Do not do anything if the status is the same
-        if(this.visible == show) return;
+        this.node.style.marginBottom = "";
+        Utils.logger("Show Controls");
+    }
 
-        if(show){
-            this.node.style.marginBottom = "";
-            Utils.logger("Show Controls");
-        }else{
-            this.node.style.marginBottom = `-${MediaPlayer.controlsHeight}px`;
+    private hideControls(): void {
+        if(this.node.style.marginBottom !== '') return;
 
-            // Hide Playrate Dropdown if it is visible
-            let playrate = this.node.querySelector(`.${identifiers.playSpeed}`);
-            if(playrate.querySelector("ul").style.display == "block"){
-                playrate.querySelector("div").click();
-            }
+        this.node.style.marginBottom = `-${MediaPlayer.controlsHeight}px`;
+        this.hidePlayrate();
 
-            Utils.logger("Hide Controls");
+        Utils.logger("Hide Controls");
+    }
+
+    private hidePlayrate(): void {
+        let playrate = this.node.querySelector(`.${identifiers.playSpeed}`);
+        if(playrate.querySelector("ul").style.display == "block"){
+            playrate.querySelector("div").click();
         }
-        
-        this.visible = show;
     }
 
     public removeControls(): void {

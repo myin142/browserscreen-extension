@@ -64,7 +64,7 @@ export class Idler {
             }
 
             // Limit idler value to 5(seconds)
-            if(this.idleTime < 5){
+            else if(this.idleTime < 5){
                 this.idleTime += 1;
                 Utils.logger(`Increased Idler: ${this.idleTime}`);
             }
