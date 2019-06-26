@@ -131,12 +131,12 @@ function restoreElements(): void {
     window.dispatchEvent(new Event("resize"));
 }
 
-function addToParents(elem: Element, className: string): void {
-    while(elem != null && elem.classList != undefined){
-        elem.classList.add(className);
-        elem = elem.parentNode as Element;
-    }
-}
+// function addToParents(elem: Element, className: string): void {
+//     while(elem != null && elem.classList != undefined){
+//         elem.classList.add(className);
+//         elem = elem.parentNode as Element;
+//     }
+// }
 
 // Add Fullscreen Classes to all Parents of Video and message top frames
 function resizeElements(elem: Element, overlay = true): void {

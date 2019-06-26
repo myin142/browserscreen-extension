@@ -13,7 +13,7 @@ export class Idler {
     private idleTime: number;
     private idleInterval: number;
 
-    constructor(private callback: IdlerCallback) {
+    public constructor(private callback: IdlerCallback) {
 
         // Setup Idler to hide controls after 5 seconds of inactivity
         // idler = 0 -> starts idler
