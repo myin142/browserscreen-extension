@@ -17,35 +17,6 @@ window.browser = (function () {
         window.chrome
 })();
 
-// Format Link to prevent mistakes with http/https
-function getFormattedSource(src: string): string {
-    return src.replace(/^https?\:\/\//i, "").replace(/^http?\:\/\//i, "");
-}
-
-// Search for Link in IFRAMEs
-function searchIFrames(link: string): HTMLIFrameElement {
-    var iframes = document.querySelectorAll("iframe");
-    for(var i = 0; i < iframes.length; i++){
-        var elemSrc = getFormattedSource(iframes[i].src);
-        var msgSrc = getFormattedSource(link);
-
-        if(elemSrc == msgSrc)
-            return iframes[i];
-    }
-}
-
-// Search for Link in OBJECTs
-function searchObjects(link: string): HTMLObjectElement {
-    var objects = document.querySelectorAll("object");
-    for(var i = 0; i < objects.length; i++){
-        var elemSrc = getFormattedSource(objects[i].data);
-        var msgSrc = getFormattedSource(link);
-
-        if(elemSrc == msgSrc)
-            return objects[i];
-    }
-}
-
 function resizeAndEmitIframe(elem: Element): void {
     Extension.overlayAllParents(elem);
     Extension.fullscreenAllParents(elem);
@@ -93,14 +64,14 @@ browser.runtime.onMessage.addListener((msg) => {
         var link = msg.subWindow;
 
         // Search Iframes
-        var iframe = searchIFrames(link);
+        var iframe = Extension.findIframeWithLink(link);
         if(iframe != null){
             resizeAndEmitIframe(iframe);
             return;
         }
 
         // Search Objects
-        var object = searchObjects(link);
+        var object = Extension.findObjectWithLink(link);
         if(object != null){
             resizeAndEmitIframe(object);
             return;

@@ -13,4 +13,8 @@ export class Utils {
         });
     }
 
+    // Format Link to prevent mistakes with http/https
+    public static getFormattedSource(src: string): string {
+        return src.replace(/^https?\:\/\//i, "").replace(/^http?\:\/\//i, "");
+    }
 }

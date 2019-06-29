@@ -46,12 +46,34 @@ export class Extension {
         if(style != null) style.parentNode.removeChild(style);
     }
 
-    /* Utils */
+    /* Search */
 
     // TODO: support multiple videos
     public static findVideo(): HTMLVideoElement {
         return document.querySelector('video');
     }
+
+    public static findIframeWithLink(link: string): Element {
+        let msgSrc = Utils.getFormattedSource(link);
+        document.querySelectorAll("iframe").forEach(frame => {
+            let src = Utils.getFormattedSource(frame.src);
+            if(src === msgSrc) return frame;
+        });
+
+        return null;
+    }
+
+    public static findObjectWithLink(link: string): Element {
+        let msgSrc = Utils.getFormattedSource(link);
+        document.querySelectorAll("object").forEach(obj => {
+            let src = Utils.getFormattedSource(obj.data);
+            if(src === msgSrc) return obj;
+        });
+
+        return null;
+    }
+
+    /* Modify */
 
     public static overlayAllParents(elem: Element): void {
         Utils.addClassToAllParents(elem, classes.overlayClass);
