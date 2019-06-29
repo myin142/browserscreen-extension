@@ -8,6 +8,8 @@ cache:
 
 script:
   - npm run lint
+  - git clone https://github.com/myin142/plyr.git
+  - cd plyr && npm install && npm run build && npm link ../ && cd ../
   - npm run build
 
 before_deploy:
