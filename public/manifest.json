@@ -17,6 +17,12 @@
 			"matches": ["*://*/*"],
 			"match_about_blank": true,
 			"all_frames": true
+		},
+		{
+			"css": ["plyr.css"],
+			"matches": ["*://*/*"],
+			"match_about_blank": true,
+			"all_frames": true
 		}
 	],
 	"background": {
