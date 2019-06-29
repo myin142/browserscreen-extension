@@ -18,8 +18,8 @@ export class BrowserVideo {
 
     private plyr;
 
-    constructor(public video: HTMLVideoElement) {
-        if(video === null) { return; }
+    public constructor(public video: HTMLVideoElement) {
+        if (video === null) { return; }
 
         this.markExistingPlyrControls();
         this.createControls();
@@ -36,11 +36,10 @@ export class BrowserVideo {
         ];
 
         plyrClasses.map(cls => document.querySelector(`.${cls}`))
-                   .filter(elem => elem !== null)
-                   .forEach(elem => {
-
-            elem.classList.add(classes.existingControlsClass);
-        });
+            .filter(elem => elem !== null)
+            .forEach(elem => {
+                elem.classList.add(classes.existingControlsClass);
+            });
     }
 
     private createControls(): void {
