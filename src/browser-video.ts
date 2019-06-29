@@ -44,7 +44,6 @@ export class BrowserVideo {
 
     private createControls(): void {
         this.plyr = new Plyr(this.video, {
-            debug: true,
             clickToPlay: false,
         });
     }
