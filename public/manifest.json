@@ -35,6 +35,6 @@
 	},
 
 	"permissions":[
-		"tabs"
+		"tabs", "https://cdn.plyr.io/*"
 	]
 }
