@@ -36,7 +36,7 @@ export class Extension {
                 z-Index: 2147483647 !important;
             }
         `;
-        style.innerHTML = css;
+        style.appendChild(document.createTextNode(css));
 
         document.querySelector("head").appendChild(style);
     }
