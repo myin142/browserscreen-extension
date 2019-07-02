@@ -55,22 +55,30 @@ export class Extension {
 
     public static findIframeWithLink(link: string): Element {
         let msgSrc = Utils.getFormattedSource(link);
+        let foundFrame = null;
         document.querySelectorAll("iframe").forEach(frame => {
             let src = Utils.getFormattedSource(frame.src);
-            if(src === msgSrc) return frame;
+            if(src === msgSrc){
+                foundFrame = frame;
+                return;
+            }
         });
 
-        return null;
+        return foundFrame;
     }
 
     public static findObjectWithLink(link: string): Element {
         let msgSrc = Utils.getFormattedSource(link);
+        let foundObj = null;
         document.querySelectorAll("object").forEach(obj => {
             let src = Utils.getFormattedSource(obj.data);
-            if(src === msgSrc) return obj;
+            if(src === msgSrc){
+                foundObj = obj;
+                return;
+            }
         });
 
-        return null;
+        return foundObj;
     }
 
     /* Modify */
