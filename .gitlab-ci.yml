@@ -9,7 +9,7 @@ stages:
   - publish
 
 before_script:
-  - npm install -g web-ext
+  - npm install
 
 build:
   stage: build
