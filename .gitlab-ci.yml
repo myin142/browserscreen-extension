@@ -20,10 +20,10 @@ build:
     - git clone --single-branch --branch custom https://github.com/myin142/plyr.git
     - cd plyr && npm install && npm run build && npm link ../ && cd ../
     - npm run build
-    - npm run publish -- --api-key=$AMO_ISSUER --api-secret=$AMO_SECRET --id=browserscreen
+    - npm run publish -- --api-key=$AMO_ISSUER --api-secret=$AMO_SECRET
   artifacts:
     paths:
-      - ./*.xpi
+      - ./dist/web-ext-artifacts/*.xpi
 
 publish:
   stage: publish
