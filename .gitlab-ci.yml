@@ -11,7 +11,7 @@ stages:
 before_script:
   - npm install -g web-ext
 
-build_artifacts:
+build:
   stage: build
   only:
     - master
@@ -25,7 +25,7 @@ build_artifacts:
     paths:
       - ./*.xpi
 
-submit_amo:
+publish:
   stage: publish
   dependencies:
     - build
