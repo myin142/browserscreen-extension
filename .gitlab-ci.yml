@@ -5,18 +5,22 @@ cache:
     - node_modules/
 
 stages:
-  - build
+  - test
   - publish
 
 before_script:
   - npm install
 
-build:
-  stage: build
-  only:
-    - master
+test:
+  stage: test
   script:
     - npm run lint
+
+publish:
+  stage: publish
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
     - git clone --single-branch --branch custom https://github.com/myin142/plyr.git
     - cd plyr && npm install && npm run build && npm link ../ && cd ../
     - npm run build
@@ -24,13 +28,3 @@ build:
   artifacts:
     paths:
       - ./dist/web-ext-artifacts/*.xpi
-
-publish:
-  stage: publish
-  dependencies:
-    - build
-  only:
-    - master
-  script:
-    - ls -la
-    # - web-ext sign --api-key=$AMO_ISSUER --api-secret=$AMO_SECRET
