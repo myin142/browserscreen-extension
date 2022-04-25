@@ -7,6 +7,7 @@
     "start": "webpack --config webpack/webpack.dev.js --watch",
     "build": "webpack --config webpack/webpack.prod.js",
     "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "publish": "cd dist/ && web-ext sign"
   },
   "repository": {
@@ -32,6 +33,6 @@
     "webpack-merge": "^4.2.1"
   },
   "dependencies": {
-    "plyr": "^3.5.6"
+    "plyr": "^3.7.2"
   }
 }
