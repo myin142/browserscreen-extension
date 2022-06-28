@@ -1,6 +1,6 @@
 # BrowserScreen
 
-![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline/myin142/browserscreen-extension/master)
+![Github Publish Status](https://img.shields.io/github/workflow/status/myin142/browserscreen-extension/Publish/master)
 ![Mozilla Add-on](https://img.shields.io/amo/v/browserscreen)
 ![Mozilla Add-on](https://img.shields.io/amo/rating/browserscreen)
 ![Mozilla Add-on](https://img.shields.io/amo/dw/browserscreen)
