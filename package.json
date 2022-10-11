@@ -8,7 +8,7 @@
     "build": "webpack --config webpack/webpack.prod.js",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "publish": "cd dist/ && web-ext sign"
+    "publish": "web-ext sign -a ./dist"
   },
   "repository": {
     "type": "git",
