@@ -53,7 +53,7 @@ export class Extension {
 
     public static findIframeWithLink(link: string): Element {
         const msgSrc = Utils.getFormattedSource(link);
-        const foundFrame = null;
+        let foundFrame = null;
         document.querySelectorAll("iframe").forEach((frame) => {
             const src = Utils.getFormattedSource(frame.src);
             if (src === msgSrc) {
