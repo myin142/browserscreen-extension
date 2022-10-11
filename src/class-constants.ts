@@ -10,4 +10,5 @@ export const classes = {
 export const plyr = {
     main: `.plyr:not(.${classes.existingControlsClass})`,
     controls: `.plyr__controls:not(.${classes.existingControlsClass})`,
+    wrapper: `.plyr__video_wrapper:not(.${classes.existingControlsClass})`,
 };

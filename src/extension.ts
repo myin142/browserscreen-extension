@@ -26,7 +26,6 @@ export class Extension {
                 left: 0 !important;
                 right: 0 !important;
                 bottom: 0 !important;
-                width: 100% !important;
                 max-width: 100% !important;
                 max-height: 100% !important;
                 margin: auto;

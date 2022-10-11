@@ -16,6 +16,10 @@ export class BrowserVideo {
         return document.querySelector(plyr.controls);
     }
 
+    public get videoWrapper(): Element {
+        return document.querySelector(plyr.wrapper);
+    }
+
     private plyr;
 
     public constructor(public video: HTMLVideoElement) {
