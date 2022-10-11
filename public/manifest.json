@@ -9,7 +9,7 @@
 
   "name": "BrowserScreen",
   "description": "Resizing Video to fit browser screen",
-  "version": "2.0.4",
+  "version": "2.0.5",
 
   "browser_specific_settings": {
     "gecko": {
