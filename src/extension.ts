@@ -10,10 +10,10 @@ export class Extension {
     public static createStyles(): void {
         if (this.mainStyle != null) return;
 
-        let style = document.createElement("style");
+        const style = document.createElement("style");
         style.id = classes.styleID;
 
-        let css = `
+        const css = `
             ::-webkit-scrollbar{
                 display: none;
             }
@@ -40,7 +40,7 @@ export class Extension {
     }
 
     public static removeStyles(): void {
-        let style = this.mainStyle;
+        const style = this.mainStyle;
         if (style != null) style.parentNode.removeChild(style);
     }
 
@@ -52,10 +52,10 @@ export class Extension {
     }
 
     public static findIframeWithLink(link: string): Element {
-        let msgSrc = Utils.getFormattedSource(link);
-        let foundFrame = null;
+        const msgSrc = Utils.getFormattedSource(link);
+        const foundFrame = null;
         document.querySelectorAll("iframe").forEach((frame) => {
-            let src = Utils.getFormattedSource(frame.src);
+            const src = Utils.getFormattedSource(frame.src);
             if (src === msgSrc) {
                 foundFrame = frame;
                 return;
@@ -66,10 +66,10 @@ export class Extension {
     }
 
     public static findObjectWithLink(link: string): Element {
-        let msgSrc = Utils.getFormattedSource(link);
+        const msgSrc = Utils.getFormattedSource(link);
         let foundObj = null;
         document.querySelectorAll("object").forEach((obj) => {
-            let src = Utils.getFormattedSource(obj.data);
+            const src = Utils.getFormattedSource(obj.data);
             if (src === msgSrc) {
                 foundObj = obj;
                 return;
@@ -100,7 +100,7 @@ export class Extension {
     /* Emitting Messages */
     public static emitResizeOrRestore(): void {
         const message =
-      this.mainStyle == null ? { resize: true } : { restore: true };
+            this.mainStyle == null ? { resize: true } : { restore: true };
         this.sendMessage(message);
     }
 
@@ -114,7 +114,7 @@ export class Extension {
         this.sendMessage({ found: true }, callback);
     }
 
-    private static sendMessage(msg: object, callback?: Function): void {
+    private static sendMessage(msg: object, callback?: () => void): void {
         browser.runtime.sendMessage(msg, callback);
     }
 }

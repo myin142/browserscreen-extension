@@ -1,2 +1,2 @@
 declare module 'plyr';
-declare var browser;
+declare let browser;

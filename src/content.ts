@@ -61,17 +61,17 @@ browser.runtime.onMessage.addListener((msg) => {
 
     // On Message from an IFRAME/OBJECT
     else if(msg.subWindow){
-        var link = msg.subWindow;
+        const link = msg.subWindow;
 
         // Search Iframes
-        var iframe = Extension.findIframeWithLink(link);
+        const iframe = Extension.findIframeWithLink(link);
         if(iframe != null){
             resizeAndEmitIframe(iframe);
             return;
         }
 
         // Search Objects
-        var object = Extension.findObjectWithLink(link);
+        const object = Extension.findObjectWithLink(link);
         if(object != null){
             resizeAndEmitIframe(object);
             return;
